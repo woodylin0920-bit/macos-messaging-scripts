@@ -51,6 +51,7 @@ POS=$(osascript "$SCRIPT_DIR/wa_reply.scpt" "$TARGET")
 # comma from the target text) must NOT be mistaken for coordinates.
 if [[ ! "$POS" =~ ^[0-9]+,[0-9]+$ ]]; then
   wa_log "⚠️  $POS — not replying (target not uniquely found)."
+  wa_escape   # close the chat so it isn't left open marking incoming messages 已讀
   exit 1
 fi
 wa_log "Replying to message at $POS"

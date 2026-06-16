@@ -20,6 +20,14 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 OUT="$DIR/messaging_coords.local.sh"
 WHICH="${1:-all}"
 
+# Reject unknown modes BEFORE touching the override file — otherwise a typo
+# (e.g. "whatsap") would rewrite the file with just a header, silently wiping
+# existing overrides and reverting both apps to defaults.
+case "$WHICH" in
+  all|whatsapp|line) ;;
+  *) echo "❌ 未知模式 '$WHICH'。用法:./calibrate.sh [all|whatsapp|line]"; exit 1 ;;
+esac
+
 command -v cliclick >/dev/null 2>&1 || {
   echo "❌ 需要 cliclick。請先安裝:brew install cliclick"
   exit 1
