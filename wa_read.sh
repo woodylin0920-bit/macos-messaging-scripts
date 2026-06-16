@@ -41,3 +41,7 @@ fi
 sleep 0.5
 
 osascript "$SCRIPT_DIR/wa_read.scpt" "$COUNT"
+
+# Close the chat (one Esc → splash) so WhatsApp isn't left sitting in the
+# conversation marking later incoming messages read.
+wa_escape

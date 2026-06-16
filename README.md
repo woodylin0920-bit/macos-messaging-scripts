@@ -17,20 +17,30 @@
 
 ---
 
-## 功能
+## 功能矩陣
 
-| App | 傳訊息 | 傳檔案 | 語音/視訊通話 | 開聊天室方式 |
-|---|:---:|:---:|:---:|---|
-| **WhatsApp** | ✅ | ✅ | ✅ | URL scheme(已知號碼,最穩)→ 否則 AX 依名字選人 |
-| **LINE** | ✅ | ✅ | ✅ | 搜尋 + 截圖視覺確認(無 URL scheme) |
+圖例:✅ 已完成 · 🔜 開發中/下一步 · ⚠️ 受限(可做但不穩/需視覺) · ❌ UI 做不到
 
-**通用能力**
-- 🎯 **AX 選檔(防送錯檔)**:用檔名精準選取,找不到就中止,結構上不會送錯檔。
-- 🎯 **AX 選人(WhatsApp)**:聊天列是 AXButton,依名字精準點擊,免座標、避免打錯人;撞名則退回視覺確認。
-- 📐 **座標可校準化**:所有座標 `${VAR:-預設}`,可被環境變數或 `messaging_coords.local.sh` 覆寫;附互動校準腳本 `calibrate.sh`,換機器不用改原始碼。
-- ⏰ **可排程**:搭配 `hermes cron` 定時執行(相對時間如 `1m` / 指定時間如 `40 16 * * *`),實測兩種都能觸發。
-- 🈶 **CJK 安全輸入**:用 `pbcopy + AX set value` 塞文字,避開輸入法全型字問題。
-- 📸 **永不盲信 exit 0**:每個動作輸出 before/after 截圖路徑,動作後用截圖確認。
+| 功能 | WhatsApp | LINE | 說明 |
+|---|:---:|:---:|---|
+| 傳訊息 | ✅ | ✅ | CJK 安全(`pbcopy` + AX `set value`)|
+| 傳檔案 | ✅ | ✅ | AX 依**檔名**精準選取 → **結構上不會送錯檔** |
+| 語音 / 視訊通話 | ✅ | ✅ | 撥通 + 可設定 N 秒後自動掛斷 |
+| 讀取訊息 | ✅ **AX 純文字** | ✅ 截圖+視覺 | WhatsApp 泡泡在 AX 樹可讀(含已讀狀態);LINE 為 `AXUnknown` 只能截圖 |
+| 列出最近聊天 | ✅ **AX 純文字** | ✅ 截圖 | 讓 agent 先看「有誰、誰未讀」再行動 |
+| 找對聯絡人 | ✅ AX 依名字 | ⚠️ 視覺確認 | WhatsApp 列是 AXButton;LINE 列 `AXUnknown` → 須截圖確認 |
+| 開聊天室 | URL scheme(已知號碼最穩) | 搜尋(無 URL scheme) | |
+| 群組送訊息 | ✅ | ✅ | 群組=有名字的 chat,沿用「依名字選」路徑 |
+| 關聊天室(防卡已讀) | ✅ Esc | ✅ Esc | 動作後關閉,避免一直標 **已讀** |
+| 排程定時執行 | ✅ `hermes cron` | ⚠️ | 盲排只建議 WhatsApp(URL scheme);LINE 須人工/視覺確認 |
+| 回覆指定訊息 | 🔜 下一步 | ⚠️ 較難 | WhatsApp:AX 定位泡泡→右鍵「回覆」(選單需像素定位)|
+| 表情回應 react | 🔜 | ⚠️ | hover 觸發,靠座標 |
+| 搜尋歷史訊息 | ❌ | ❌ | AX 只讀目前可見;深度歷史需另一套(見 Roadmap)|
+
+**底層通用能力**
+- 📐 **座標可校準化**:座標 `${VAR:-預設}`,可被環境變數 / `messaging_coords.local.sh` 覆寫;`calibrate.sh` 互動校準,換機器免改碼。
+- 📸 **永不盲信 exit 0**:每個動作輸出 before/after 截圖路徑(`MEDIA:`),動作後截圖確認。
+- 🧩 **AX 優先、座標為輔**:能用 Accessibility 認元件/檔名/名字的就用 AX(穩),其餘才用像素座標。
 
 ---
 
@@ -84,6 +94,8 @@ cd macos-messaging-scripts && chmod +x *.sh
 | `wa_msg.sh` | 傳訊息 | `wa_msg.sh "Alice" "嗨"` |
 | `wa_file.sh` | 傳檔案 | `wa_file.sh "Alice" /tmp/a.pdf "" "說明文字"` |
 | `wa_call.sh` | 打電話 | `wa_call.sh "Alice" 5 voice`（撥通 5 秒後掛斷）|
+| `wa_read.sh` | 讀訊息(純文字) | `wa_read.sh "Alice" 12` |
+| `wa_list_chats.sh` | 列出最近聊天 | `wa_list_chats.sh 15` |
 
 ### LINE
 | 腳本 | 功能 | 範例 |
@@ -91,8 +103,10 @@ cd macos-messaging-scripts && chmod +x *.sh
 | `line_msg.sh` | 傳訊息 | `line_msg.sh "Alice" "早安" 1` |
 | `line_file.sh` | 傳檔案 | `line_file.sh "Alice" /tmp/a.png 1` |
 | `line_call.sh` | 打電話 | `line_call.sh "Alice" 5 1 voice` |
+| `line_read.sh` | 讀訊息(截圖→視覺) | `line_read.sh "Alice" 1` |
+| `line_list_chats.sh` | 列出最近聊天(截圖) | `line_list_chats.sh` |
 
-共用模組:`wa_helpers.sh` / `line_helpers.sh`(座標、電話簿、所有共用函式)、`panel_select.scpt`(AX 選檔)、`wa_pick.scpt`(AX 選人)。
+共用模組:`wa_helpers.sh` / `line_helpers.sh`(座標、電話簿、共用函式)、`panel_select.scpt`(AX 選檔)、`wa_pick.scpt`(AX 選人)、`wa_read.scpt` / `wa_chats.scpt`(AX 讀取)。
 
 ### 搭配 hermes 排程(定時送)
 ```bash
@@ -145,15 +159,31 @@ LINE / WhatsApp 桌面 App
 
 ---
 
-## Roadmap / 待新增
+## Roadmap
 
-- [ ] **Telegram** 傳訊息 / 傳檔(可走 hermes gateway 的 `--deliver telegram`,或桌面版自動化)
-- [ ] **WhatsApp / LINE 讀取訊息**(讀最近對話、未讀)
-- [ ] **群組** 支援(指定群組送、@提及)
-- [ ] **訊息回覆 / 表情回應**(reply、reaction)
-- [ ] **LINE 選人改 AX**(目前 LINE 列在 AX 為 `AXUnknown`,只能視覺確認;待 LINE 改版或找到可讀路徑)
-- [ ] **iMessage** 整合(與既有 `imessage` skill 串接)
-- [ ] **更穩的視窗幾何自適應**(自動讀實際視窗 frame,減少校準需求)
+**已完成**
+- [x] 傳訊息 / 傳檔 / 通話(WhatsApp + LINE)
+- [x] AX 防送錯檔的檔案選取
+- [x] AX 依名字選對聯絡人(WhatsApp)
+- [x] 讀取訊息、列出最近聊天(WhatsApp 純文字 / LINE 截圖)
+- [x] Esc 關聊天室(防卡已讀)
+- [x] 座標校準化 + `calibrate.sh`
+- [x] `hermes cron` 定時執行(相對 + 指定時間)
+
+**開發中 / 下一步**
+- [ ] **回覆指定訊息**(WhatsApp 先做:AX 定位泡泡 → 右鍵「回覆」)
+- [ ] **表情回應 react**
+- [ ] **🩺 首次/出錯自動初始化(auto-init + doctor)** ← 規劃中
+  - 第一次使用或偵測到錯誤時,自動跑一遍:量測螢幕解析度 / 縮放、自動 pin 視窗、盡量用 AX 推導座標、檢查 `cliclick` 與 Accessibility 權限、確認 App 已開並可 pin。
+  - 等於把現在「手動 `calibrate.sh`」升級成「**裝好即用、壞了自動健檢**」,降低一般用戶門檻。
+
+**待開發 / 未來**
+- [ ] **Telegram**(走 hermes gateway `--deliver telegram` 或桌面自動化)
+- [ ] **未讀數 / 只讀不標已讀**(研究是否可行)
+- [ ] **LINE 選人改 AX**(目前列為 `AXUnknown`,等可讀路徑)
+- [ ] **iMessage** 整合(串既有 `imessage` skill)
+- [ ] **視窗幾何自適應**(自動讀實際 frame,減少校準)
+- [ ] **深度歷史搜尋**(UI 只能讀目前可見;若真要跨大量歷史,才考慮非 UI 方案——但會犧牲隨插即用)
 
 歡迎 issue / PR。
 
