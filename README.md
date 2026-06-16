@@ -1,5 +1,7 @@
 # macOS Messaging Automation Scripts
 
+**English** · [繁體中文](README.zh-TW.md) · [简体中文](README.zh-CN.md)
+
 Automate the **LINE** and **WhatsApp** desktop apps on macOS — send messages,
 send files, place voice/video calls, read and list chats, and reply to a
 specific message. Built as a skill for
