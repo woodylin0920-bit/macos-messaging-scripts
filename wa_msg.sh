@@ -37,7 +37,12 @@ else
   wa_log "No phone for $CONTACT, using search (result #$RESULT_INDEX)"
   wa_activate
   wa_search "$CONTACT"
-  wa_click_result "$RESULT_INDEX"
+  # Prefer AX-pick by exact name; fall back to vision-gated row click if the name
+  # is ambiguous (e.g. collides with self-chat) or not found.
+  if ! wa_pick_chat_by_name "$CONTACT"; then
+    wa_log "AX pick failed — falling back to result #$RESULT_INDEX (VISION-CONFIRM the row!)"
+    wa_click_result "$RESULT_INDEX"
+  fi
 fi
 
 wa_send_message "$MESSAGE"

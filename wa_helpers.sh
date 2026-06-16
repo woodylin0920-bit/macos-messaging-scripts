@@ -240,6 +240,23 @@ wa_click_result() {
   sleep 0.8
 }
 
+# ── AX-pick a chat by EXACT name (preferred over wa_click_result) ──
+# Rows are AXButtons whose description is the contact name, so we click the
+# matching one directly — no pixel row coords, no unstable-order wrong-person
+# risk. Returns 0 only when EXACTLY ONE row matched (clicked it); nonzero when
+# none or several matched (e.g. a name colliding with the self-chat). On nonzero
+# the caller falls back to the vision-gated wa_click_result — never a blind guess.
+wa_pick_chat_by_name() {
+  local name="$1" rc
+  rc=$(osascript "$_WA_HELPER_DIR/wa_pick.scpt" "$name" 2>&1)
+  if [[ "$rc" == "OK" ]]; then
+    sleep 0.8
+    return 0
+  fi
+  wa_log "AX pick: $rc"
+  return 1
+}
+
 wa_start_call() {
   local type="${1:-voice}"
   cliclick c:${WA_CALL_DROPDOWN_X},${WA_CALL_DROPDOWN_Y}

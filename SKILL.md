@@ -549,11 +549,18 @@ which does this automatically.
 **⚠️ Search result "對話" section header pushes rows down.** The old formula
 `y = 148 + (N-1) × 66` is WRONG. Correct: `y = 197 + (N-1) × 68`.
 
-**⚠️ Search result ORDER IS UNSTABLE.** The same query ("Woody Lin") returns
-different row order depending on recent chat/call activity. Self-chat
-"Woody Lin (你)" can be #1 or #2. **Never hardcode result_index for names
-that match both a contact and self-chat.** Either use vision to identify
-the correct row, or use URL scheme (for messages) which bypasses search.
+**✅ Preferred: AX-pick by name (`wa_pick.scpt` / `wa_pick_chat_by_name`).**
+WhatsApp chat/search rows are **AXButtons whose description is the contact name**,
+so the scripts now click the row matching the name EXACTLY via Accessibility —
+no pixel row coords, no result_index. It clicks only when EXACTLY ONE row matches;
+if the name collides with the self-chat (two "Woody Lin" rows) it returns
+"ambiguous" and the caller falls back to the vision-gated `wa_click_result`.
+(LINE rows are NOT AX-readable — all `AXUnknown` — so LINE stays vision-only.)
+
+**⚠️ Search result ORDER IS UNSTABLE** (fallback path only). The same query
+("Woody Lin") returns different row order depending on recent activity; self-chat
+"Woody Lin (你)" can be #1 or #2. So when AX-pick is ambiguous, **never hardcode
+result_index** — use vision to identify the row, or URL scheme (bypasses search).
 
 **⚠️ Search result click X must be in the LEFT sidebar (x≈197), NOT the chat area.**
 Clicking too far right (x>350) lands in the chat pane, not the search results list.
@@ -799,7 +806,9 @@ dir with symlinks from `~/.hermes/scripts/`.
 **WhatsApp helpers** (`wa_helpers.sh`):
 - `wa_activate` — open, activate, pin window frame, dismiss popups
 - `wa_search <name>` — Cmd+F, clear, type name
-- `wa_click_result <N>` — click Nth search result row
+- `wa_pick_chat_by_name <name>` — AX-click the row matching the name exactly
+  (preferred; returns nonzero if ambiguous/not-found → caller falls back)
+- `wa_click_result <N>` — click Nth search result row (vision-gated fallback)
 - `wa_start_call [voice|video]` — dropdown → menu item click
 - `wa_hangup` — find call window (width≠1440) → close via traffic light
 - `wa_get_phone <name>` — contact → phone number lookup
