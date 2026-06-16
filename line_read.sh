@@ -24,9 +24,13 @@ line_log "search results: $BEFORE — VISION-CONFIRM row $RESULT_INDEX == \"$CON
 line_click_result "$RESULT_INDEX"
 sleep 1
 
-CHAT=$(line_shot read_chat)
+# Crop to the chat pane ONLY (drop the list / dock / menu bar) so the message
+# text stays large and legible for the vision model. Region matches the pinned
+# LINE frame ({0,30} 1440×794); full-screen shots make the text too small to read.
+CHAT="/tmp/line_read_chat_$(date +%s).png"
+screencapture -x -R340,30,1100,745 "$CHAT"
 echo "MEDIA:$CHAT"
-line_log "chat screenshot: $CHAT — read the messages visually from this image"
+line_log "chat screenshot (cropped to chat pane): $CHAT — read the messages visually"
 
 line_close_chat
 line_hide
