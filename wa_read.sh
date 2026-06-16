@@ -33,9 +33,12 @@ else
   wa_log "No phone for $CONTACT, using search + AX pick"
   wa_activate
   wa_search "$CONTACT"
+  # FAIL CLOSED: reading the wrong chat leaks someone else's messages. If the name
+  # isn't a unique match, abort rather than reading row 1. (URL-scheme path above
+  # is unambiguous.)
   if ! wa_pick_chat_by_name "$CONTACT"; then
-    wa_log "AX pick failed/ambiguous — VISION-CONFIRM the chat before trusting output"
-    wa_click_result 1
+    wa_log "⚠️  '$CONTACT' 不是唯一相符(撞名/找不到)。為避免讀到錯的人的訊息,中止。請用更精確的名字或已知號碼。"
+    exit 1
   fi
 fi
 sleep 0.5

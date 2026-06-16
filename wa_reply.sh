@@ -35,7 +35,13 @@ EOF
 else
   wa_activate
   wa_search "$CONTACT"
-  if ! wa_pick_chat_by_name "$CONTACT"; then wa_click_result 1; fi
+  # FAIL CLOSED: a reply SENDS — never guess. If the name isn't a unique match
+  # (ambiguous / not found), abort instead of clicking row 1 and replying to the
+  # wrong chat. (URL-scheme path above has no such ambiguity.)
+  if ! wa_pick_chat_by_name "$CONTACT"; then
+    wa_log "⚠️  '$CONTACT' 不是唯一相符(撞名/找不到)。為避免回覆到錯的人,中止不送。請用更精確的名字或已知號碼。"
+    exit 1
+  fi
 fi
 sleep 0.5
 
