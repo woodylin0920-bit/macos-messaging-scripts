@@ -1,5 +1,10 @@
 # macOS 即时通讯自动化脚本
 
+![Platform](https://img.shields.io/badge/platform-macOS-000000?logo=apple&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Bash](https://img.shields.io/badge/bash-3.2%2B-4EAA25?logo=gnubash&logoColor=white)
+![hermes-agent](https://img.shields.io/badge/hermes--agent-skill-7B68EE)
+
 [English](README.md) · [繁體中文](README.zh-TW.md) · **简体中文**
 
 在 macOS 上自动化 **LINE** 与 **WhatsApp** 桌面版 —— 发消息、发文件、拨语音/视频电话、读取与列出会话、回复指定消息。设计为 [Nous Research `hermes-agent`](https://github.com/nousresearch/hermes-agent) 的 skill,也可作为独立 shell 脚本使用。

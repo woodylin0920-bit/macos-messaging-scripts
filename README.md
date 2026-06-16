@@ -1,5 +1,10 @@
 # macOS Messaging Automation Scripts
 
+![Platform](https://img.shields.io/badge/platform-macOS-000000?logo=apple&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Bash](https://img.shields.io/badge/bash-3.2%2B-4EAA25?logo=gnubash&logoColor=white)
+![hermes-agent](https://img.shields.io/badge/hermes--agent-skill-7B68EE)
+
 **English** · [繁體中文](README.zh-TW.md) · [简体中文](README.zh-CN.md)
 
 Automate the **LINE** and **WhatsApp** desktop apps on macOS — send messages,
