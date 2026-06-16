@@ -3,7 +3,7 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # line_msg.sh — send a text message via LINE (vision-gated; LINE has no URL scheme)
 # Usage: line_msg.sh <contact_name> <message> [result_index]
 #
-#   line_msg.sh "Woody Lin" "早安" 1
+#   line_msg.sh "Alice" "早安" 1
 #
 # ⚠️ No URL scheme for LINE → search is unavoidable → wrong-person risk. The
 #    BEFORE screenshot (echoed MEDIA:) MUST be vision-confirmed (row title ==

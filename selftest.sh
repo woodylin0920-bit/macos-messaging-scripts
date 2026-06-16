@@ -6,11 +6,11 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # (e.g. from Telegram) — deterministic, self-contained, clean text output.
 #
 # Sends real messages/files and places short auto-hung-up calls to the contact,
-# so point it at a test contact you own. Defaults: WhatsApp "Woody Lin", LINE "Woody".
+# so point it at a test contact you own. Defaults: WhatsApp "Alice", LINE "Alice".
 
 S="$(cd "$(dirname "$0")" && pwd)"
-WA="${1:-Woody Lin}"
-LN="${2:-Woody}"
+WA="${1:-Alice}"
+LN="${2:-Alice}"
 STAMP=$(date +%H%M%S)
 TF="/tmp/selftest_${STAMP}.txt"
 printf 'macos-messaging selftest %s\n' "$STAMP" > "$TF"

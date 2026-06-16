@@ -3,8 +3,8 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # line_file.sh — send a file via LINE (vision-gated; LINE has no URL scheme)
 # Usage: line_file.sh <contact_name> <file_path> [result_index]
 #
-#   line_file.sh "Woody Lin" /tmp/pic.png        # send to row1
-#   line_file.sh "Woody Lin" /tmp/pic.png 2      # send to row2
+#   line_file.sh "Alice" /tmp/pic.png        # send to row1
+#   line_file.sh "Alice" /tmp/pic.png 2      # send to row2
 #
 # ⚠️ No URL scheme → search is unavoidable → wrong-person risk. The BEFORE
 #    screenshot MUST be vision-confirmed. Not cron-safe blind.

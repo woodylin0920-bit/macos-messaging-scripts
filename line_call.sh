@@ -3,8 +3,8 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # line_call.sh — LINE voice/video call (vision-gated, NOT blind no_agent)
 # Usage: line_call.sh <contact_name> [hang_up_seconds] [result_index] [voice|video]
 #
-#   line_call.sh "Woody Lin" 3            # voice call row1, hang up after 3s
-#   line_call.sh "Woody Lin" 3 2 video    # video call row2, hang up after 3s
+#   line_call.sh "Alice" 3            # voice call row1, hang up after 3s
+#   line_call.sh "Alice" 3 2 video    # video call row2, hang up after 3s
 #
 # ⚠️ LINE has NO URL scheme — search-based, always carries wrong-person risk.
 #    result_index must come from HUMAN/VISION confirmation. Not cron-safe blind.
