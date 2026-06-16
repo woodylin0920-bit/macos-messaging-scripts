@@ -17,6 +17,28 @@
 
 ---
 
+## 目標 (Goals)
+
+讓 hermes agent 在 macOS 上把 LINE / WhatsApp 當「另一支手機的助理」來操作,核心三原則:
+
+- **精準** — 優先用 Accessibility(認元件 / 檔名 / 聯絡人名 / 鍵盤選單);**截圖只當最後手段**(LINE 內容 AX 讀不到才用)。防打錯人、防送錯檔。
+- **速度 / 即時** — WhatsApp 讀取走 **AX 純文字**(快、便宜);避免冗餘截圖。
+- **hermes agent 適配** — 腳本確定性、輸出乾淨可解析、能被 agent 一次跑完、可 `hermes cron` 排程、隨插即用(不申請 API、用已登入的桌面 App)。
+
+## 測試目標 (Acceptance)
+
+| # | 驗收項 | 狀態 |
+|---|---|:---:|
+| T1 | 六項基本功能:WA/LINE × 訊息/檔案/通話 | ✅ |
+| T2 | 讀訊息(WA 純文字 / LINE 截圖)+ 列出最近聊天 | ✅ |
+| T3 | 回覆指定訊息(WA:AX 定位 + 鍵盤選單) | ✅ |
+| T4 | 防呆:不送錯檔(AX 檔名)、不打錯人(AX 名字/撞名退回)、不卡已讀(Esc) | ✅ |
+| T5 | hermes agent 端到端(讀聊天 + 回答問題 / 執行腳本) | ✅ |
+| T6 | 排程定時執行(相對時間 + 指定時間點) | ✅ |
+| T7 | 從 Telegram 下一個指令 → agent 一次跑完全部並回報 | 🔜 最終驗收 |
+
+---
+
 ## 功能矩陣
 
 圖例:✅ 已完成 · 🔜 開發中/下一步 · ⚠️ 受限(可做但不穩/需視覺) · ❌ UI 做不到
@@ -33,7 +55,7 @@
 | 群組送訊息 | ✅ | ✅ | 群組=有名字的 chat,沿用「依名字選」路徑 |
 | 關聊天室(防卡已讀) | ✅ Esc | ✅ Esc | 動作後關閉,避免一直標 **已讀** |
 | 排程定時執行 | ✅ `hermes cron` | ⚠️ | 盲排只建議 WhatsApp(URL scheme);LINE 須人工/視覺確認 |
-| 回覆指定訊息 | 🔜 下一步 | ⚠️ 較難 | WhatsApp:AX 定位泡泡→右鍵「回覆」(選單需像素定位)|
+| 回覆指定訊息 | ✅ | ⚠️ 較難 | WhatsApp:AX 依文字定位泡泡 → 右鍵 → **鍵盤** ↓+Enter 選「回覆」(不靠截圖)|
 | 表情回應 react | 🔜 | ⚠️ | hover 觸發,靠座標 |
 | 搜尋歷史訊息 | ❌ | ❌ | AX 只讀目前可見;深度歷史需另一套(見 Roadmap)|
 
@@ -96,6 +118,7 @@ cd macos-messaging-scripts && chmod +x *.sh
 | `wa_call.sh` | 打電話 | `wa_call.sh "Alice" 5 voice`（撥通 5 秒後掛斷）|
 | `wa_read.sh` | 讀訊息(純文字) | `wa_read.sh "Alice" 12` |
 | `wa_list_chats.sh` | 列出最近聊天 | `wa_list_chats.sh 15` |
+| `wa_reply.sh` | 回覆指定訊息 | `wa_reply.sh "Alice" "要回覆的訊息片段" "回覆內容"` |
 
 ### LINE
 | 腳本 | 功能 | 範例 |
