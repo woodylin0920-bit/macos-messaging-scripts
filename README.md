@@ -258,6 +258,21 @@ Issues and PRs welcome.
 
 ---
 
+## Disclaimer
+
+This project automates personal LINE/WhatsApp accounts through the desktop apps'
+UI. It is provided for **personal, individual use**, as-is and without warranty.
+
+- Automating a personal account may violate the **WhatsApp / LINE Terms of
+  Service**; the typical consequence is account suspension. Use at your own risk.
+- Do **not** use it for spam, bulk or unsolicited messaging, impersonation, or
+  reading/collecting other people's messages without consent — beyond the ToS,
+  those may breach anti-spam and privacy laws.
+- For commercial or large-scale use, consult a lawyer and use the official APIs
+  (WhatsApp Business Cloud API, LINE Messaging API) instead.
+
+The authors are not responsible for how you use this software.
+
 ## License
 
 MIT
