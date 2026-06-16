@@ -8,6 +8,9 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 source "$(cd "$(dirname "$0")" && pwd)/line_helpers.sh"
 
 line_activate
+# Clear any leftover search query/overlay (LINE persists it across sessions),
+# otherwise the screenshot would show filtered results, not the recent chat list.
+line_close_chat
 sleep 0.3
 # Crop to the left chat-list pane (matches the pinned {0,30} 1440×794 frame).
 # Width 400 so the right-aligned timestamps are NOT clipped (340 cut them off).
