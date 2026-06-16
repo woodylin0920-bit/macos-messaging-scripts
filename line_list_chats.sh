@@ -9,9 +9,10 @@ source "$(cd "$(dirname "$0")" && pwd)/line_helpers.sh"
 
 line_activate
 sleep 0.3
-# Crop to the left chat-list pane only (matches the pinned {0,30} 1440×794 frame)
+# Crop to the left chat-list pane (matches the pinned {0,30} 1440×794 frame).
+# Width 400 so the right-aligned timestamps are NOT clipped (340 cut them off).
 SHOT="/tmp/line_chats_$(date +%s).png"
-screencapture -x -R0,30,340,760 "$SHOT"
+screencapture -x -R0,30,400,760 "$SHOT"
 echo "MEDIA:$SHOT"
 line_log "chat-list screenshot (cropped): $SHOT — read the chat names visually"
 echo "✅ LINE chat list captured → $SHOT (vision required; LINE list has no AX text)."
