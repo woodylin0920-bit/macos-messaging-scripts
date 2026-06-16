@@ -2,7 +2,7 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # wa_file.sh <contact_name> <file_path> [result_index] [caption]
 # URL scheme preferred (if phone known), search fallback.
-# Attach via + → 檔案 → Cmd+Shift+G in Finder panel.
+# Attach via + → 檔案 → panel_select.scpt (AX picks the file by exact name).
 #
 # ⚠️ Search fallback: result order is UNSTABLE — use vision to confirm!
 

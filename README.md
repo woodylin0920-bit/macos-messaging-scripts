@@ -70,7 +70,7 @@ LINE + WhatsApp 桌面版自動化腳本（AppleScript + System Events + cliclic
 
 ## 關鍵教訓
 - `keystroke` 過輸入法 → 全型字 → 路徑壞掉。一律用 `pbcopy + Cmd+V`
-- Finder panel 的 Cmd+Shift+G 要先 click panel 拿 focus
+- 傳檔案用 `panel_select.scpt`(AX 依檔名精準選檔),不要用 Cmd+Shift+G 打路徑（會選錯檔）
 - 所有座標以 pin 好的視窗 frame 為準
 - **永遠不要只信 exit 0**：腳本會輸出 before/after 截圖路徑（`MEDIA:`），
   動作後用截圖確認真的送出 / 撥通 / 送對人

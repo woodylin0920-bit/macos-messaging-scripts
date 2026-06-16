@@ -95,40 +95,34 @@ near wrong-person send. Hermes MUST screenshot → vision-confirm the row title 
 the intended contact BEFORE clicking. AX can't read LINE row titles, so this is
 vision-only.
 
-**File send — the macOS open panel behaves DIFFERENTLY per app:**
-- **WhatsApp (Electron): the open panel DOES accept Cmd+Shift+G** but ONLY if
-  the panel has focus first. Click inside the panel's file list area (cliclick)
-  BEFORE sending the shortcut. Also: `keystroke` in the Go-to-folder sheet goes
-  through the input method → full-width chars → path broken. Always use
-  `pbcopy + Cmd+V` to paste the path. `wa_file.sh` stages the file in a temp
-  dir, opens + → 檔案, clicks the panel, Cmd+Shift+G → paste path → navigate.
-- **LINE (native): the open panel TAKES the keyboard** — but keystrokes must
-  target the panel process `com.apple.appkit.xpc.openAndSavePanelService`
-  (`set frontmost of that process to true` first), not LINE. Reliable select:
-  stage the file alone in an empty dir, Cmd+Shift+G → that dir (NO trailing
-  slash) → Enter (navigates into dir, shows contents) → Down (select the lone
-  file) → Enter (send). `line_file.sh` does this.
-  ⚠️ **Staging dir cleanup is CRITICAL**: `rm -rf /tmp/hermes_lf_stage_*` at
-  the start of every run. Old staging dirs from interrupted runs contain stale
-  files (e.g. `proposal.txt`). The Finder panel remembers its last-visited
-  location, so Cmd+Shift+G may land on an OLD staging dir and send the WRONG
-  file — exit 0, no error, completely silent wrong-file send.
-  ⚠️ Cmd+Shift+G with a FILE path only navigates to the folder; it does NOT
-  reliably select the file → wrong-file sends.
-  ⚠️ Cmd+Shift+G with a trailing "/" navigates to the PARENT dir and highlights
-  the target folder as a row but does NOT enter it. Without trailing "/" it
-  navigates directly INTO the dir and shows its contents. Always omit the
-  trailing slash.
-      (`/tmp/`) and highlights the folder row. Does NOT enter it. You'd need
-      Enter (select) → Enter (open folder) → Down → Enter = 4 keystrokes.
-    - Path WITHOUT trailing `/` (e.g. `/tmp/staging`) → navigates DIRECTLY INTO
-      the dir. One Enter dismisses the Go-to sheet and the panel shows the dir
-      contents. Down → Enter = 2 keystrokes. **Always use this form.**
-  ⚠️ **Stale staging dir pitfall:** `line_file.sh` stages files in `/tmp/hermes_lf_stage_*`.
-    Old dirs from interrupted runs are NOT cleaned by `trap EXIT` (only fires on
-    clean exit). The Finder panel remembers last-visited location → can land on a
-    stale dir with a DIFFERENT file → silent wrong-file send. Fix: `rm -rf
-    /tmp/hermes_lf_stage_*` at script start before creating the new staging dir.
+**File send — drive the open panel via Accessibility, NEVER Cmd+Shift+G.**
+The old approach (Cmd+Shift+G → type/paste a path → Down → Enter) is **banned**:
+it silently sends the WRONG file. Live-confirmed 2026/06 — WhatsApp's Electron
+open panel just **ignores Cmd+Shift+G**, so the panel stays on whatever folder it
+last remembered (e.g. `~/Downloads/bst_boost_interprocess`) and `Down → Enter`
+selects+sends the first file there. Exit 0, no error, a stray file lands in the
+chat. (It happened during testing; the file had to be recalled with
+「為所有人刪除」.)
+
+**The robust, wrong-file-proof method (`panel_select.scpt`) — used by both apps:**
+1. Stage the file in **`~/Downloads`** (a reliable sidebar location). Keep the
+   original name unless it would clobber an existing file → then a unique name,
+   so cleanup never deletes the user's own file.
+2. Open the panel (WhatsApp: + → 檔案; LINE: 📎 paperclip).
+3. Run `panel_select.scpt <proc> 下載項目 <filename>` — it drives the NSOpenPanel
+   **entirely via AX**: clicks the「下載項目」sidebar row to navigate, then selects
+   the file ROW whose name matches **exactly**. Returns `OK`, or `ERR:` if the
+   exact name isn't visible.
+4. If `ERR:` → **Escape the panel and ABORT (do NOT send).** A wrong file can
+   never go out, because send only happens after an exact-name match.
+5. Press Return (the default Open button). WhatsApp shows a send preview (add
+   caption, Enter to send); LINE sends immediately.
+6. Remove the staged file from `~/Downloads`.
+
+Both `wa_send_file` and `line_attach_file` implement this. The open panel is a
+`sheet 1 of window 1` of each app process (LINE's is **not** a separate XPC
+process here) and its sidebar labels + file rows are **fully AX-readable** — so
+no pixel coordinates and no Cmd+Shift+G are involved in file selection at all.
 
 **WhatsApp call icon = dropdown:** `(1365,58)` → 語音 `(1390,88)` / 視訊
 `(1390,110)`. `wa_hangup` closes the call window (width≠1440) via its traffic-light.
@@ -661,28 +655,22 @@ osascript -e 'tell application "System Events" to tell process "WhatsApp" to key
 
 ## Sending a file attachment (LINE)
 
-Use `line_file.sh` or call `line_attach_file()` from `line_helpers.sh`. The flow:
+Use `line_file.sh` or call `line_attach_file()` from `line_helpers.sh`. The flow
+(same wrong-file-proof method as WhatsApp — see "File send" above):
 
-1. Stage the file alone in an empty temp dir (`/tmp/hermes_lf_stage_$$`)
-2. Click the paperclip (📎) at `(402, 802)` — opens Finder open panel
-3. Click inside the panel file list `(760, 420)` to ensure focus
-4. **Cmd+Shift+G** to open "Go to folder" sheet
-5. **`cliclick tc:700,270`** (triple-click to select stale text) → **`cliclick t:"$STAGE_DIR"`** (type path)
-6. Enter → navigates into dir → Down → selects lone file → Enter → sends
+1. Stage the file in **`~/Downloads`** (original name, or a unique name if that
+   would clobber an existing file).
+2. Click the paperclip (📎) at `(402, 802)` — opens the macOS open panel.
+3. `panel_select.scpt LINE 下載項目 <filename>` — AX-navigates to Downloads and
+   selects the row matching the filename **exactly**. Returns `OK` / `ERR:`.
+4. On `ERR:` → Escape + ABORT (never sends a wrong file).
+5. Press Return → LINE sends the file. Remove the staged file afterward.
 
-⚠️ **Why `cliclick t:` not `Cmd+V`?** LINE is a native app. Its Finder open panel
-is hosted by `com.apple.appkit.xpc.openAndSavePanelService` (a separate XPC process).
-System Events `keystroke "v" using command down` targets LINE (or the panel process)
-but the Go-to-folder text field sits across the XPC boundary — neither process
-receives the paste. `cliclick t:` uses **CGEvent** (hardware-level keystrokes) which
-go to whichever element has focus, ignoring process boundaries. WhatsApp (Electron)
-doesn't have this issue because its panel runs in-process.
-
-⚠️ **Triple-click before typing**: The Go-to-folder text field **retains the path
-from its last use**. A single click (`cliclick c:`) positions the cursor but doesn't
-select existing text → `cliclick t:` appends the new path to the old one → broken
-path → silent failure (exit 0). Always `cliclick tc:` (triple-click = select all)
-before `cliclick t:` to replace the old text.
+⚠️ **Do NOT use Cmd+Shift+G / `cliclick t:` to type a path.** The old flow did
+that and could land on a stale folder → silent wrong-file send. LINE's open panel
+here is a `sheet 1 of window 1` of the **LINE** process (not the XPC service), and
+its sidebar + file rows are AX-readable, so `panel_select.scpt` selects by name
+deterministically — no typing, no coordinates.
 
 **Pitfall — `open -a Line /path/to/file`**: This triggers a QR-code popup ("LINE應用程式專用功能 請用手機掃描"), NOT a file send. Never use this approach.
 
@@ -773,14 +761,11 @@ open "whatsapp://send?phone=886912345678&text=$ENCODED"
   1440×900 screen). Vision coordinates from the image must be **divided by 2**
   before passing to `cliclick`. Forgetting this is the #1 cause of "click
   didn't register" on LINE/WhatsApp automation.
-- **LINE Finder panel ignores `Cmd+V` — use `cliclick t:` instead** — LINE's
-  native Finder open panel is hosted by an XPC service
-  (`com.apple.appkit.xpc.openAndSavePanelService`). System Events keystrokes
-  target LINE's process, not the XPC service, so `Cmd+V` silently drops.
-  `cliclick t:` sends CGEvent (hardware-level) to whoever has focus, bypassing
-  the process boundary. WhatsApp (Electron) doesn't have this issue. Also:
-  the Go-to-folder text field retains the previous path — always `cliclick tc:`
-  (triple-click select-all) before `cliclick t:` to replace, not append.
+- **File picking is AX-only now — don't type paths into the open panel.** Both
+  apps' open panels are `sheet 1 of window 1` with AX-readable sidebar + file
+  rows; `panel_select.scpt` navigates and selects by exact filename. The old
+  Cmd+Shift+G / `cliclick t:` path-typing is removed (it caused silent wrong-file
+  sends). See "File send" near the top.
 - **`Cmd+V` / `keystroke` unreliable for LINE** — Focus jumps between cliclick
   and the keystroke. Always use `AXFocusedUIElement` + `set value` instead.
 - **Double-nested `tell process` causes `-1728`** — Never write
@@ -828,7 +813,7 @@ dir with symlinks from `~/.hermes/scripts/`.
 - `line_send_text` — click input via AX position, set value from clipboard, Enter
 - `line_start_call [voice|video]` — phone icon dropdown → menu item → confirm
 - `line_hangup` — Escape → confirm dialog → Enter
-- `line_attach_file <staging_dir>` — 📎 → Cmd+Shift+G → cliclick tc: + t: → navigate → send
+- `line_attach_file <file_path>` — 📎 → `panel_select.scpt` (AX pick by name) → send
 - `line_hide` — Cmd+H
 - `line_shot <label>` — screencapture with timestamped filename
 - `line_log <msg>` — prefixed log output
@@ -850,10 +835,8 @@ source "$(cd "$(dirname "$0")" && pwd)/line_helpers.sh"
 # Coordinates and window geometry are centralized here.
 # Edit line_helpers.sh to update coords or add features.
 ```
-⚠️ **Go-to-folder text field in LINE's native Finder panel:**
-- Does NOT accept System Events `Cmd+V` (the XPC panel process boundary blocks it)
-- DOES accept `cliclick t:` (CGEvent, bypasses process boundary)
-- Retains old path from previous use → must `cliclick tc:` (triple-click select-all) before typing
+ℹ️ **File picking uses `panel_select.scpt` (AX), not Go-to-folder typing.** See
+the "File send" section near the top for the wrong-file-proof flow.
 
 ### `scripts/line_call.sh` — LINE voice call (vision-gated, NOT blind no_agent)
 ```bash
@@ -889,23 +872,22 @@ interactive flow AFTER a human/vision has confirmed which row is correct.
 ```bash
 ~/.hermes/scripts/wa_file.sh <contact_name> <file_path> [result_index] [caption]
 # URL scheme if phone known, search fallback otherwise.
-# Attach via + → 檔案 → Cmd+Shift+G (panel must have focus first!) → paste
-# staging dir path (pbcopy, NOT keystroke — avoids full-width IM issue).
-# Optional caption in the file preview before sending.
+# Attach via + → 檔案, then panel_select.scpt picks the file by exact name (AX).
+# Aborts (no send) if the name isn't found. Optional caption before sending.
 ```
 ⚠️ **The old clipboard mechanism (`set the clipboard to POSIX file` + Cmd+V)
-does NOT work** — WhatsApp's Electron app ignores a POSIX-file clipboard paste,
-so the file never attaches but the script exited 0 (fake success). Replaced
-2026/06 with the attachment-button + Finder `Cmd+Shift+G` flow (same pattern as
-the LINE file-send section above). Same known-phone limitation as `wa_msg.sh`.
+does NOT work** — WhatsApp's Electron app ignores a POSIX-file clipboard paste.
+⚠️ **The Cmd+Shift+G path-typing flow was also removed** — WhatsApp's panel
+ignored the shortcut and silently sent the wrong file. Now uses the AX
+`panel_select.scpt` picker (see "File send" up top). Same known-phone limitation
+as `wa_msg.sh`.
 
 ### `scripts/line_file.sh` — LINE file send (vision-gated, NO URL scheme)
 ```bash
 ~/.hermes/scripts/line_file.sh <contact_name> <file_path> [result_index]
-# Sources line_helpers.sh. Stages file in /tmp/hermes_lf_stage_$$,
-# searches, screenshots for vision title-confirm, opens chat, clicks 📎,
-# uses line_attach_file() for Cmd+Shift+G → cliclick t: path → navigate → send.
-# ⚠️ Cleans up /tmp/hermes_lf_stage_* at start to prevent stale-dir wrong-file sends.
+# Sources line_helpers.sh. Searches, screenshots for vision title-confirm,
+# opens chat, clicks 📎, then line_attach_file() → panel_select.scpt picks the
+# file by exact name (AX) and sends. Aborts (no send) if the name isn't found.
 ```
 ⚠️ LINE has no URL scheme, so the search-result title MUST be vision-confirmed
 (the echoed `MEDIA:` before-screenshot) before attaching. Not cron-safe blind.

@@ -42,9 +42,9 @@ WA_ATTACH_X=${WA_ATTACH_X:-363}
 WA_ATTACH_Y=${WA_ATTACH_Y:-802}
 WA_ATTACH_FILE_X=${WA_ATTACH_FILE_X:-415}   # "檔案" menu item (top of the + popup)
 WA_ATTACH_FILE_Y=${WA_ATTACH_FILE_Y:-603}
-# Open-panel first file row (sorted by modified-date DESC → freshly-copied file
-# is row 1). The Electron open panel ignores keyboard (Cmd+Shift+G/type), so we
-# select by MOUSE only. Calibrated to the panel's remembered frame 2026/06.
+# Open-panel first file row. LEGACY: the file send now picks files via AX
+# (panel_select.scpt), so these coords are no longer used by wa_send_file. Kept
+# only as a fallback reference; safe to ignore.
 WA_PANEL_ROW1_X=${WA_PANEL_ROW1_X:-490}
 WA_PANEL_ROW1_Y=${WA_PANEL_ROW1_Y:-310}
 
