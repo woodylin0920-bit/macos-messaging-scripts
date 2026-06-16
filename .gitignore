@@ -1,0 +1,3 @@
+# Runtime screenshots / staging dirs the scripts write to /tmp
+*.png
+.DS_Store
