@@ -35,7 +35,14 @@
 | T4 | 防呆:不送錯檔(AX 檔名)、不打錯人(AX 名字/撞名退回)、不卡已讀(Esc) | ✅ |
 | T5 | hermes agent 端到端(讀聊天 + 回答問題 / 執行腳本) | ✅ |
 | T6 | 排程定時執行(相對時間 + 指定時間點) | ✅ |
-| T7 | 從 Telegram 下一個指令 → agent 一次跑完全部並回報 | 🔜 最終驗收 |
+| T7 | 從 Telegram 下一個指令 → agent 一次跑完全部並回報 | ✅ 11/11(背景跑 `selftest.sh`)|
+
+> **一鍵自我測試**:`selftest.sh` 跑完整 WA+LINE 矩陣(11 項)並印 PASS/FAIL。
+> 因 GUI 測試 >60s,從 agent(如 Telegram)觸發時用背景跑:
+> ```bash
+> nohup ~/.hermes/scripts/selftest.sh > /tmp/selftest_result.txt 2>&1 &   # 啟動
+> cat /tmp/selftest_result.txt                                            # ~80s 後讀結果
+> ```
 
 ---
 
