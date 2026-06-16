@@ -24,7 +24,7 @@ on run argv
         try
           set d to description of e
           if d is not missing value and d contains needle then
-            if (d contains "上午" or d contains "下午" or d contains "已傳送給" or d contains "已讀" or d contains "已送達") then
+            if (d contains "上午" or d contains "下午" or d contains "已傳送給" or d contains "已讀" or d contains "已送達" or d contains ":0" or d contains ":1" or d contains ":2" or d contains ":3" or d contains ":4" or d contains ":5") then
               set p to position of e
               set sz to size of e
               set rowX to item 1 of p

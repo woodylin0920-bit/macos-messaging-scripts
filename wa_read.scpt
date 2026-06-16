@@ -24,7 +24,7 @@ on run argv
           set d to description of e
           if d is not missing value and d is not "" then
             if (d contains "訊息" or d contains "文件" or d contains "相片" or d contains "照片" or d contains "通話" or d contains "貼圖" or d contains "語音" or d contains "已傳送給") then
-              if (d contains "上午" or d contains "下午" or d contains "昨天" or d contains "週" or d contains "已傳送給" or d contains "已讀" or d contains "已送達") then
+              if (d contains "上午" or d contains "下午" or d contains "昨天" or d contains "週" or d contains "已傳送給" or d contains "已讀" or d contains "已送達" or d contains ":0" or d contains ":1" or d contains ":2" or d contains ":3" or d contains ":4" or d contains ":5") then
                 if (d does not contain "端對端") and (d does not contain "的對話訊息") and (d does not contain "請使用手機版") then
                   set p to position of e
                   set sz to size of e
