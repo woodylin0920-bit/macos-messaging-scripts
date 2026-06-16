@@ -153,34 +153,45 @@ line_hangup() {
   sleep 0.5
 }
 
-# ── Attach file via Finder panel (Cmd+Shift+G + cliclick t:) ──
-# Usage: line_attach_file "/absolute/path/to/staging_dir"
+# ── Attach + send a file via the paperclip → AX file picker ──
+# Wrong-file-proof, like wa_send_file: stage the file in ~/Downloads (a reliable
+# sidebar location), then drive the open panel ENTIRELY via Accessibility — click
+# the "下載項目" sidebar entry, then select the row whose name matches EXACTLY
+# (panel_select.scpt). If the name isn't found it ABORTS without sending.
+# This replaces the old Cmd+Shift+G + cliclick-type + Down + Enter flow, which
+# could land on a stale folder and silently send the wrong file.
+# Pass the FILE PATH (not a staging dir).
 line_attach_file() {
-  local stage_dir="$1"
-  # Click paperclip
+  local filepath="$1"
+  local base sendname dl rc
+  base=$(basename "$filepath")
+
+  # Stage in ~/Downloads; unique name only if it would clobber an existing file
+  # (so cleanup never deletes the user's own file).
+  sendname="$base"
+  if [[ -e "$HOME/Downloads/$sendname" ]]; then
+    sendname="hermes_$$_$base"
+  fi
+  dl="$HOME/Downloads/$sendname"
+  cp "$filepath" "$dl" || { line_log "stage copy failed"; return 1; }
+
+  # Click paperclip → open panel
   cliclick c:${LINE_ATTACH_X},${LINE_ATTACH_Y}
-  sleep 1.8
-  # Click inside panel to ensure focus
-  cliclick c:760,420
-  sleep 0.3
-  # Open Go-to-folder sheet
-  osascript -e 'tell application "System Events" to keystroke "g" using {command down, shift down}'
-  sleep 1.2
-  # Triple-click to select any stale text, then type path
-  # (LINE's Go-to-folder ignores Cmd+V; cliclick t: is the only way)
-  cliclick tc:700,270
-  sleep 0.2
-  cliclick t:"$stage_dir"
-  sleep 0.5
-  # Enter → navigate into dir
+  sleep 2.2
+
+  # AX-select the file by exact name; abort (no send) if not found.
+  rc=$(osascript "$_LINE_HELPER_DIR/panel_select.scpt" "LINE" "下載項目" "$sendname" 2>&1)
+  if [[ "$rc" != "OK" ]]; then
+    line_log "⚠️  file picker aborted ($rc) — cancelling, NOT sending"
+    osascript -e 'tell application "System Events" to key code 53' >/dev/null 2>&1
+    rm -f "$dl"
+    return 1
+  fi
+
+  # Open the selected file → LINE sends it
   osascript -e 'tell application "System Events" to key code 36'
-  sleep 1.5
-  # Down → select the lone file
-  osascript -e 'tell application "System Events" to key code 125'
-  sleep 0.5
-  # Enter → open/send
-  osascript -e 'tell application "System Events" to key code 36'
-  sleep 1.8
+  sleep 2
+  rm -f "$dl"
 }
 
 # ── Hide LINE ──

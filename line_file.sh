@@ -25,14 +25,6 @@ if [ ! -f "$FILEPATH" ]; then
 fi
 ABSPATH=$(cd "$(dirname "$FILEPATH")" && pwd)/$(basename "$FILEPATH")
 
-# Stage the file alone in a dedicated EMPTY dir — zero ambiguity in Finder panel.
-# ⚠️ Clean ALL old staging dirs first (interrupted runs leave stale files).
-rm -rf /tmp/hermes_lf_stage_*
-STAGE_DIR="/tmp/hermes_lf_stage_$$"
-mkdir -p "$STAGE_DIR"
-cp "$ABSPATH" "$STAGE_DIR/$(basename "$ABSPATH")"
-trap 'rm -rf "$STAGE_DIR"' EXIT
-
 # 1. Activate + pin
 line_activate
 
@@ -47,8 +39,8 @@ line_log "before-screenshot: $BEFORE (confirm row $RESULT_INDEX title == \"$CONT
 # 4. Open chat
 line_click_result "$RESULT_INDEX"
 
-# 5. Attach file via Finder panel
-line_attach_file "$STAGE_DIR"
+# 5. Attach + send file via AX file picker (wrong-file-proof)
+line_attach_file "$ABSPATH"
 
 # 6. Post-verify
 AFTER=$(line_shot after)

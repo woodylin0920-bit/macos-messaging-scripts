@@ -348,78 +348,68 @@ wa_postverify() {
   echo "$shot"
 }
 
-# ── Send a file via the attachment "+" → 檔案 → Cmd+Shift+G in Finder panel ──
-# WhatsApp is Electron but Cmd+Shift+G DOES work IF the Finder panel has focus.
-# Key: click inside the panel's file list area FIRST, then send the shortcut.
-# Same staging-dir pattern as LINE: isolate the file in an empty temp dir so
-# there's zero ambiguity when selecting.
+# ── Send a file via the attachment "+" → 檔案 → AX file picker ──
+# Robust, wrong-file-proof selection: stage the file in ~/Downloads (a reliable
+# sidebar location), then drive the macOS open panel ENTIRELY via Accessibility —
+# click the "下載項目" sidebar entry, then select the row whose name matches the
+# file EXACTLY (panel_select.scpt). If the name isn't found it ABORTS without
+# sending. This replaces the old Cmd+Shift+G + Down + Enter flow, which on some
+# machines silently selected whatever file the panel was sitting on and sent it.
 # Optional $2 = caption text (shown under the file in the send preview).
 # Chat must already be open.
 wa_send_file() {
   local filepath="$1"
   local caption="${2:-}"
-  local base
+  local base sendname dl rc
   base=$(basename "$filepath")
 
-  # Stage the file alone in a temp dir
-  local stage_dir="/tmp/hermes_wa_file_$$"
-  rm -rf "$stage_dir"
-  mkdir -p "$stage_dir"
-  cp "$filepath" "$stage_dir/"
-  trap 'rm -rf "$stage_dir"' RETURN
+  # Stage in ~/Downloads. Use the original name unless it would clobber an
+  # existing file — then a unique name (so cleanup never deletes the user's file).
+  sendname="$base"
+  if [[ -e "$HOME/Downloads/$sendname" ]]; then
+    sendname="hermes_$$_$base"
+  fi
+  dl="$HOME/Downloads/$sendname"
+  cp "$filepath" "$dl" || { wa_log "stage copy failed"; return 1; }
 
   # 1. + popup → 檔案 → open panel
   cliclick c:${WA_ATTACH_X},${WA_ATTACH_Y}
-  sleep 0.8
+  sleep 0.9
   cliclick c:${WA_ATTACH_FILE_X},${WA_ATTACH_FILE_Y}
-  sleep 2
+  sleep 2.2
 
-  # 2. Click inside the panel file list to give it focus (critical!)
-  #    Then Cmd+Shift+G → type staging dir → Enter
-  cliclick c:${WA_PANEL_ROW1_X},${WA_PANEL_ROW1_Y}
-  sleep 0.3
-  osascript -e 'tell application "System Events" to keystroke "g" using {command down, shift down}'
-  sleep 1.2
-  # Clear any previous path, PASTE the new one (keystroke goes through input
-  # method → full-width chars → path broken). pbcopy+Cmd+V bypasses IM.
-  printf '%s' "$stage_dir" | pbcopy
-  osascript -e 'tell application "System Events" to keystroke "a" using command down'
-  sleep 0.2
-  osascript -e 'tell application "System Events" to key code 51'
-  sleep 0.2
-  osascript -e 'tell application "System Events" to keystroke "v" using command down'
-  sleep 0.5
-  # Enter to navigate INTO the staging dir (path WITHOUT trailing / = directly
-  # enters the dir; WITH trailing / = goes to parent and highlights folder)
-  osascript -e 'tell application "System Events" to key code 36'
-  sleep 1.5
-  # Click inside the file list to ensure it has focus after navigation
-  cliclick c:${WA_PANEL_ROW1_X},${WA_PANEL_ROW1_Y}
-  sleep 0.3
-  # Down to select the lone file
-  osascript -e 'tell application "System Events" to key code 125'
-  sleep 0.5
-  # Enter to open it → WhatsApp shows preview
+  # 2. AX-select the file by exact name (sidebar Downloads → match name). This
+  #    cannot pick the wrong file: a miss returns "ERR:" and we cancel + bail.
+  rc=$(osascript "$_WA_HELPER_DIR/panel_select.scpt" "WhatsApp" "下載項目" "$sendname" 2>&1)
+  if [[ "$rc" != "OK" ]]; then
+    wa_log "⚠️  file picker aborted ($rc) — cancelling, NOT sending"
+    osascript -e 'tell application "System Events" to key code 53' >/dev/null 2>&1
+    rm -f "$dl"
+    return 1
+  fi
+
+  # 3. Open the selected file (default button) → WhatsApp shows the send preview
   osascript -e 'tell application "System Events" to key code 36'
   sleep 2
 
-  # 3. If caption provided, type it in the caption field
+  # 4. Optional caption
   if [[ -n "$caption" ]]; then
     printf '%s' "$caption" | pbcopy
     osascript << 'EOF'
 tell application "System Events"
   set f to value of attribute "AXFocusedUIElement" of process "WhatsApp"
-  if class of f is text area then
-    set value of f to (the clipboard as text)
-  end if
+  try
+    if class of f is text area then set value of f to (the clipboard as text)
+  end try
 end tell
 EOF
     sleep 0.3
   fi
 
-  # 4. Send (Enter in the preview)
+  # 5. Send (Enter in the preview)
   osascript -e 'tell application "System Events" to tell process "WhatsApp" to key code 36'
   sleep 1.5
 
+  rm -f "$dl"
   wa_postverify file
 }
