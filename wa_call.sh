@@ -21,7 +21,7 @@ if [[ -n "$PHONE" ]]; then
   # URL scheme → correct chat, no search needed
   wa_log "Opening $CONTACT via URL scheme ($PHONE)"
   open "whatsapp://send?phone=$PHONE"
-  sleep 3
+  sleep 2
   osascript -e 'tell application "WhatsApp" to activate' >/dev/null 2>&1
   sleep 0.3
   wa_pin_window

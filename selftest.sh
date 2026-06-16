@@ -28,14 +28,14 @@ echo "WhatsApp → ${WA} | LINE → ${LN}"
 echo "── WhatsApp ──"
 chk     "WA 傳訊息"        "$S/wa_msg.sh"  "$WA" "🤖 selftest WA msg ${STAMP}"
 chk     "WA 傳檔案"        "$S/wa_file.sh" "$WA" "$TF" "" "🤖 selftest WA file ${STAMP}"
-chk     "WA 通話(撥+掛)"   "$S/wa_call.sh" "$WA" 4 voice
+chk     "WA 通話(撥+掛)"   "$S/wa_call.sh" "$WA" 2 voice
 chk_out "WA 讀訊息"        "selftest WA msg ${STAMP}" "$S/wa_read.sh" "$WA" 6
 chk_out "WA 列出聊天"      "•"             "$S/wa_list_chats.sh" 8
 chk     "WA 回覆指定訊息"  "$S/wa_reply.sh" "$WA" "selftest WA msg ${STAMP}" "↩️ selftest WA reply ${STAMP}"
 echo "── LINE ──"
 chk     "LINE 傳訊息"      "$S/line_msg.sh"  "$LN" "🤖 selftest LINE msg ${STAMP}" 1
 chk     "LINE 傳檔案"      "$S/line_file.sh" "$LN" "$TF" 1
-chk     "LINE 通話(撥+掛)" "$S/line_call.sh" "$LN" 4 1 voice
+chk     "LINE 通話(撥+掛)" "$S/line_call.sh" "$LN" 2 1 voice
 chk_out "LINE 讀訊息(截圖)" "MEDIA:"        "$S/line_read.sh" "$LN" 1
 chk_out "LINE 列出聊天(截圖)" "MEDIA:"      "$S/line_list_chats.sh"
 

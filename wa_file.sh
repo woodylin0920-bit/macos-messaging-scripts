@@ -31,7 +31,7 @@ PHONE=$(wa_get_phone "$CONTACT" 2>/dev/null || true)
 if [[ -n "$PHONE" ]]; then
   wa_log "Opening $CONTACT via URL scheme ($PHONE)"
   open "whatsapp://send?phone=$PHONE"
-  sleep 3
+  sleep 2
   osascript -e 'tell application "WhatsApp" to activate' >/dev/null 2>&1
   sleep 0.3
   wa_pin_window
