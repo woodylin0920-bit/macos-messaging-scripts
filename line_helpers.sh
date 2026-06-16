@@ -4,20 +4,29 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # Source at the top of any line_*.sh script:
 #   source "$(cd "$(dirname "$0")" && pwd)/line_helpers.sh"
 
+# ── Per-machine coordinate overrides ────────────────────────────────────────
+# Every coordinate below is ${VAR:-default}, overridable WITHOUT editing this
+# file: export the var, or (preferred) drop a git-ignored
+# messaging_coords.local.sh next to this file. Run ./calibrate.sh to generate it
+# for YOUR screen. With nothing overridden, every value falls back to the
+# original 2026/06 calibration — behaviour is identical to before.
+_LINE_HELPER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+[ -f "$_LINE_HELPER_DIR/messaging_coords.local.sh" ] && . "$_LINE_HELPER_DIR/messaging_coords.local.sh"
+
 # ── LINE window geometry (pinned) — 1440×794 @ (0,30) ──
-LINE_WIN_X=0 ; LINE_WIN_Y=30 ; LINE_WIN_W=1440 ; LINE_WIN_H=794
+LINE_WIN_X=${LINE_WIN_X:-0} ; LINE_WIN_Y=${LINE_WIN_Y:-30} ; LINE_WIN_W=${LINE_WIN_W:-1440} ; LINE_WIN_H=${LINE_WIN_H:-794}
 
 # ── Calibrated coords (2026/06, live-verified) ──
 # Search results
-LINE_RESULT_X=150 ; LINE_RESULT_ROW1_Y=198 ; LINE_ROW_H=70
+LINE_RESULT_X=${LINE_RESULT_X:-150} ; LINE_RESULT_ROW1_Y=${LINE_RESULT_ROW1_Y:-198} ; LINE_ROW_H=${LINE_ROW_H:-70}
 # Call dropdown
-LINE_PHONE_ICON_X=1370 ; LINE_PHONE_ICON_Y=112
-LINE_VOICE_X=1375 ; LINE_VOICE_Y=157
-LINE_VIDEO_X=1375 ; LINE_VIDEO_Y=185
+LINE_PHONE_ICON_X=${LINE_PHONE_ICON_X:-1370} ; LINE_PHONE_ICON_Y=${LINE_PHONE_ICON_Y:-112}
+LINE_VOICE_X=${LINE_VOICE_X:-1375} ; LINE_VOICE_Y=${LINE_VOICE_Y:-157}
+LINE_VIDEO_X=${LINE_VIDEO_X:-1375} ; LINE_VIDEO_Y=${LINE_VIDEO_Y:-185}
 # Attach (paperclip) button
-LINE_ATTACH_X=402 ; LINE_ATTACH_Y=802
+LINE_ATTACH_X=${LINE_ATTACH_X:-402} ; LINE_ATTACH_Y=${LINE_ATTACH_Y:-802}
 # Input field center (from AX: text area 1 of splitter group 1 of splitter group 1)
-LINE_INPUT_X=908 ; LINE_INPUT_Y=748
+LINE_INPUT_X=${LINE_INPUT_X:-908} ; LINE_INPUT_Y=${LINE_INPUT_Y:-748}
 
 # ── Logging ──
 line_log() { echo "[line] $*"; }

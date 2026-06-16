@@ -40,19 +40,33 @@ LINE + WhatsApp 桌面版自動化腳本（AppleScript + System Events + cliclic
 
 ## 移植 / 校準（換機器一定要做）
 
-座標常數都集中在 `wa_helpers.sh` / `line_helpers.sh` 最上方。重抓步驟：
+座標是針對特定螢幕校準的,換機器幾乎一定要重抓。但**不需要改原始碼** —— 有互動
+校準腳本:
 
-1. **先 pin 視窗**到腳本假設的 frame（WhatsApp `{0,25} 1440×875`、LINE `{0,30} 1440×794`）。
-   你也可以改腳本裡的 frame 成自己慣用的大小,但改了就要重抓下面所有座標。
-2. **讀游標座標**：終端機跑 `cliclick p`，把滑鼠移到目標按鈕（輸入框、電話 icon、
-   選單項目…）上,記下印出的 `x,y`，回填到對應常數。
-3. **介面語言**：腳本內寫死了繁中字串（`檔案`、`確定要與X進行通話?`、
-   `你的對話和通話均受隱私保護` 隱私 popup）。介面非繁中的話,選單位置與這些
-   文字都要跟著改。
-4. **電話簿**：把 `wa_helpers.sh` 的 `wa_curated_phone()` 換成你自己的聯絡人
+```bash
+./calibrate.sh            # LINE + WhatsApp 都校準
+./calibrate.sh whatsapp   # 只校準 WhatsApp
+./calibrate.sh line       # 只校準 LINE
+```
+
+它會逐項提示你「把滑鼠移到某按鈕上按 Enter」,用 `cliclick p` 讀座標,產生一個
+`messaging_coords.local.sh`(已 git-ignore)。`wa_helpers.sh` / `line_helpers.sh`
+會自動載入它覆寫預設值。**想還原預設就刪掉這個檔。**
+
+> 原理:helpers 裡每個座標都寫成 `${VAR:-預設值}`。沒有 local 檔、也沒設環境變數
+> 時,完全等於原本的值(行為不變);有 local 檔時才套用你的值。你也可以直接
+> `export WA_INPUT_X=860` 之類臨時覆寫單一座標。
+
+校準前請先:
+
+1. **把視窗擺到腳本假設的大小**（WhatsApp `{0,25} 1440×875`、LINE `{0,30} 1440×794`）,
+   或你自己慣用的大小（但每次要一致）。
+2. **介面語言**:腳本內寫死了繁中字串（`檔案`、`確定要與X進行通話?`、
+   `你的對話和通話均受隱私保護` 隱私 popup）。介面非繁中的話,這些文字要在腳本裡改。
+3. **電話簿**:把 `wa_helpers.sh` 的 `wa_curated_phone()` 換成你自己的聯絡人
    （目前是 `alice` / `bob smith` 範例）。**不要把自己的號碼放進去**,否則 URL
    scheme 會開到自聊天。
-5. 改寫腳本後記得 `chmod +x *.sh`（覆寫常常會掉執行權限）。
+4. 改寫腳本後記得 `chmod +x *.sh`（覆寫常常會掉執行權限）。
 
 ## 關鍵教訓
 - `keystroke` 過輸入法 → 全型字 → 路徑壞掉。一律用 `pbcopy + Cmd+V`

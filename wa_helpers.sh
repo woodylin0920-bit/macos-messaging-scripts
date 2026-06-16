@@ -2,46 +2,55 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # wa_helpers.sh — shared functions for WhatsApp automation scripts
 
+# ── Per-machine coordinate overrides ────────────────────────────────────────
+# Every coordinate below is written as ${VAR:-default}, so it can be overridden
+# WITHOUT editing this file: either export the var, or (preferred) drop a
+# git-ignored messaging_coords.local.sh next to this file. Run ./calibrate.sh to
+# generate that file for YOUR screen. With nothing overridden, every value falls
+# back to the original 2026/06 calibration — behaviour is identical to before.
+_WA_HELPER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+[ -f "$_WA_HELPER_DIR/messaging_coords.local.sh" ] && . "$_WA_HELPER_DIR/messaging_coords.local.sh"
+
 # Fixed window frame (screen points)
-WA_WIN_X=0
-WA_WIN_Y=25
-WA_WIN_W=1440
-WA_WIN_H=875
+WA_WIN_X=${WA_WIN_X:-0}
+WA_WIN_Y=${WA_WIN_Y:-25}
+WA_WIN_W=${WA_WIN_W:-1440}
+WA_WIN_H=${WA_WIN_H:-875}
 
 # Search result coordinates (2026/06 calibrated)
-WA_SEARCH_ROW1_Y=197
-WA_SEARCH_ROW_HEIGHT=68
+WA_SEARCH_ROW1_Y=${WA_SEARCH_ROW1_Y:-197}
+WA_SEARCH_ROW_HEIGHT=${WA_SEARCH_ROW_HEIGHT:-68}
 
 # Chat header icons (live-calibrated 2026/06 against actual window {0,30}/1440×796).
 # The call icon opens a DROPDOWN; the menu opens slightly DOWN-RIGHT of the icon
 # (items at x≈1390, NOT 1350 — old value missed). Click icon → then menu item.
-WA_CALL_DROPDOWN_X=1365
-WA_CALL_DROPDOWN_Y=58
-WA_VOICE_CALL_X=1390
-WA_VOICE_CALL_Y=88
-WA_VIDEO_CALL_X=1390
-WA_VIDEO_CALL_Y=110
+WA_CALL_DROPDOWN_X=${WA_CALL_DROPDOWN_X:-1365}
+WA_CALL_DROPDOWN_Y=${WA_CALL_DROPDOWN_Y:-58}
+WA_VOICE_CALL_X=${WA_VOICE_CALL_X:-1390}
+WA_VOICE_CALL_Y=${WA_VOICE_CALL_Y:-88}
+WA_VIDEO_CALL_X=${WA_VIDEO_CALL_X:-1390}
+WA_VIDEO_CALL_Y=${WA_VIDEO_CALL_Y:-110}
 
 # Input field
-WA_INPUT_X=850
-WA_INPUT_Y=795
+WA_INPUT_X=${WA_INPUT_X:-850}
+WA_INPUT_Y=${WA_INPUT_Y:-795}
 
 # Attachment "+" button — bottom-left of the input bar (live-calibrated 2026/06).
 # Clicking it opens a popup MENU (檔案 / 照片和影片 / 投票 / 活動 / 聯絡人); to
 # send an arbitrary file click "檔案" (top item) → Finder opens.
-WA_ATTACH_X=363
-WA_ATTACH_Y=802
-WA_ATTACH_FILE_X=415   # "檔案" menu item (top of the + popup)
-WA_ATTACH_FILE_Y=603
+WA_ATTACH_X=${WA_ATTACH_X:-363}
+WA_ATTACH_Y=${WA_ATTACH_Y:-802}
+WA_ATTACH_FILE_X=${WA_ATTACH_FILE_X:-415}   # "檔案" menu item (top of the + popup)
+WA_ATTACH_FILE_Y=${WA_ATTACH_FILE_Y:-603}
 # Open-panel first file row (sorted by modified-date DESC → freshly-copied file
 # is row 1). The Electron open panel ignores keyboard (Cmd+Shift+G/type), so we
 # select by MOUSE only. Calibrated to the panel's remembered frame 2026/06.
-WA_PANEL_ROW1_X=490
-WA_PANEL_ROW1_Y=310
+WA_PANEL_ROW1_X=${WA_PANEL_ROW1_X:-490}
+WA_PANEL_ROW1_Y=${WA_PANEL_ROW1_Y:-310}
 
 # Privacy-popup close X ("你的對話和通話均受隱私保護" modal)
-WA_PRIVACY_X=590
-WA_PRIVACY_Y=140
+WA_PRIVACY_X=${WA_PRIVACY_X:-590}
+WA_PRIVACY_Y=${WA_PRIVACY_Y:-140}
 
 wa_log() { echo "[wa] $*" >&2; }
 
