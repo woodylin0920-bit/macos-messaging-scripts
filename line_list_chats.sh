@@ -12,10 +12,10 @@ line_activate
 # otherwise the screenshot would show filtered results, not the recent chat list.
 line_close_chat
 sleep 0.3
-# Crop to the left chat-list pane (matches the pinned {0,30} 1440×794 frame).
-# Width 400 so the right-aligned timestamps are NOT clipped (340 cut them off).
+# Crop the left chat-list pane, derived from the pinned LINE_WIN_* frame so it
+# tracks a calibrated window. Width 400 so right-aligned timestamps aren't clipped.
 SHOT="/tmp/line_chats_$(date +%s).png"
-screencapture -x -R0,30,400,760 "$SHOT"
+screencapture -x -R${LINE_WIN_X},${LINE_WIN_Y},400,$((LINE_WIN_H - 34)) "$SHOT"
 echo "MEDIA:$SHOT"
 line_log "chat-list screenshot (cropped): $SHOT — read the chat names visually"
 echo "✅ LINE chat list captured → $SHOT (vision required; LINE list has no AX text)."

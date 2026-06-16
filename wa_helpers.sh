@@ -281,7 +281,7 @@ tell application "System Events"
     set frontmost to true
     repeat with w in (every window)
       set sz to size of w
-      if (item 1 of sz) is not 1440 then
+      if (item 1 of sz) is not '"$WA_WIN_W"' then
         perform action "AXRaise" of w
         set p to position of w
         set cx to ((item 1 of p) + 8)
