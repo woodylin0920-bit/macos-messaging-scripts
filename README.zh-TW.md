@@ -7,7 +7,7 @@
 
 [English](README.md) · **繁體中文** · [简体中文](README.zh-CN.md)
 
-在 macOS 上自動化 **LINE** 與 **WhatsApp** 桌面版 —— 傳訊息、傳檔案、撥語音/視訊電話、讀取與列出聊天、回覆指定訊息。設計為 [Nous Research `hermes-agent`](https://github.com/nousresearch/hermes-agent) 的 skill,也可當獨立 shell 腳本使用。
+一個給 [Nous Research `hermes-agent`](https://github.com/nousresearch/hermes-agent) 用的 **AI agent skill**(也能當獨立 shell 腳本跑),在 macOS 上驅動 **LINE** 與 **WhatsApp** 桌面版 —— 傳訊息、傳檔案、撥語音/視訊電話、讀取與列出聊天、回覆指定訊息。
 
 底層用 AppleScript + System Events + Accessibility (AX) + [`cliclick`](https://github.com/BlueM/cliclick) 驅動。不需第三方 API 金鑰、不用掃 QR —— 直接操作你已登入的桌面 App。
 

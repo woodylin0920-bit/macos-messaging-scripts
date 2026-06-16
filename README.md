@@ -7,11 +7,11 @@
 
 **English** · [繁體中文](README.zh-TW.md) · [简体中文](README.zh-CN.md)
 
-Automate the **LINE** and **WhatsApp** desktop apps on macOS — send messages,
-send files, place voice/video calls, read and list chats, and reply to a
-specific message. Built as a skill for
-[Nous Research `hermes-agent`](https://github.com/nousresearch/hermes-agent),
-and usable as standalone shell scripts.
+An **AI-agent skill** for
+[Nous Research `hermes-agent`](https://github.com/nousresearch/hermes-agent)
+(also runnable as standalone shell scripts) that drives the **LINE** and
+**WhatsApp** desktop apps on macOS — send messages, send files, place
+voice/video calls, read and list chats, and reply to a specific message.
 
 Driven by AppleScript + System Events + Accessibility (AX) + [`cliclick`](https://github.com/BlueM/cliclick).
 No third-party API keys, no QR linking — it controls the desktop apps you are
