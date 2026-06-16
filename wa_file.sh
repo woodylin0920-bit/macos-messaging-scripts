@@ -2,7 +2,7 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # wa_file.sh <contact_name> <file_path> [result_index] [caption]
 # URL scheme preferred (if phone known), search fallback.
-# Attach via + → 檔案 → Cmd+Shift+G in Finder panel.
+# Attach via + → 檔案 → panel_select.scpt (AX picks the file by exact name).
 #
 # ⚠️ Search fallback: result order is UNSTABLE — use vision to confirm!
 
@@ -50,7 +50,10 @@ else
   wa_log "No phone for $CONTACT, using search (result #$RESULT_INDEX)"
   wa_activate
   wa_search "$CONTACT"
-  wa_click_result "$RESULT_INDEX"
+  if ! wa_pick_chat_by_name "$CONTACT"; then
+    wa_log "AX pick failed — falling back to result #$RESULT_INDEX (VISION-CONFIRM the row!)"
+    wa_click_result "$RESULT_INDEX"
+  fi
 fi
 
 wa_log "Sending file to $CONTACT: $ABSPATH"

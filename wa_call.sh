@@ -41,7 +41,10 @@ else
   wa_log "No phone for $CONTACT, using search (result #$RESULT_INDEX)"
   wa_activate
   wa_search "$CONTACT"
-  wa_click_result "$RESULT_INDEX"
+  if ! wa_pick_chat_by_name "$CONTACT"; then
+    wa_log "AX pick failed — falling back to result #$RESULT_INDEX (VISION-CONFIRM the row!)"
+    wa_click_result "$RESULT_INDEX"
+  fi
 fi
 
 wa_start_call "$CALL_TYPE"

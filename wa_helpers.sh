@@ -2,46 +2,55 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # wa_helpers.sh — shared functions for WhatsApp automation scripts
 
+# ── Per-machine coordinate overrides ────────────────────────────────────────
+# Every coordinate below is written as ${VAR:-default}, so it can be overridden
+# WITHOUT editing this file: either export the var, or (preferred) drop a
+# git-ignored messaging_coords.local.sh next to this file. Run ./calibrate.sh to
+# generate that file for YOUR screen. With nothing overridden, every value falls
+# back to the original 2026/06 calibration — behaviour is identical to before.
+_WA_HELPER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+[ -f "$_WA_HELPER_DIR/messaging_coords.local.sh" ] && . "$_WA_HELPER_DIR/messaging_coords.local.sh"
+
 # Fixed window frame (screen points)
-WA_WIN_X=0
-WA_WIN_Y=25
-WA_WIN_W=1440
-WA_WIN_H=875
+WA_WIN_X=${WA_WIN_X:-0}
+WA_WIN_Y=${WA_WIN_Y:-25}
+WA_WIN_W=${WA_WIN_W:-1440}
+WA_WIN_H=${WA_WIN_H:-875}
 
 # Search result coordinates (2026/06 calibrated)
-WA_SEARCH_ROW1_Y=197
-WA_SEARCH_ROW_HEIGHT=68
+WA_SEARCH_ROW1_Y=${WA_SEARCH_ROW1_Y:-197}
+WA_SEARCH_ROW_HEIGHT=${WA_SEARCH_ROW_HEIGHT:-68}
 
 # Chat header icons (live-calibrated 2026/06 against actual window {0,30}/1440×796).
 # The call icon opens a DROPDOWN; the menu opens slightly DOWN-RIGHT of the icon
 # (items at x≈1390, NOT 1350 — old value missed). Click icon → then menu item.
-WA_CALL_DROPDOWN_X=1365
-WA_CALL_DROPDOWN_Y=58
-WA_VOICE_CALL_X=1390
-WA_VOICE_CALL_Y=88
-WA_VIDEO_CALL_X=1390
-WA_VIDEO_CALL_Y=110
+WA_CALL_DROPDOWN_X=${WA_CALL_DROPDOWN_X:-1365}
+WA_CALL_DROPDOWN_Y=${WA_CALL_DROPDOWN_Y:-58}
+WA_VOICE_CALL_X=${WA_VOICE_CALL_X:-1390}
+WA_VOICE_CALL_Y=${WA_VOICE_CALL_Y:-88}
+WA_VIDEO_CALL_X=${WA_VIDEO_CALL_X:-1390}
+WA_VIDEO_CALL_Y=${WA_VIDEO_CALL_Y:-110}
 
 # Input field
-WA_INPUT_X=850
-WA_INPUT_Y=795
+WA_INPUT_X=${WA_INPUT_X:-850}
+WA_INPUT_Y=${WA_INPUT_Y:-795}
 
 # Attachment "+" button — bottom-left of the input bar (live-calibrated 2026/06).
 # Clicking it opens a popup MENU (檔案 / 照片和影片 / 投票 / 活動 / 聯絡人); to
 # send an arbitrary file click "檔案" (top item) → Finder opens.
-WA_ATTACH_X=363
-WA_ATTACH_Y=802
-WA_ATTACH_FILE_X=415   # "檔案" menu item (top of the + popup)
-WA_ATTACH_FILE_Y=603
-# Open-panel first file row (sorted by modified-date DESC → freshly-copied file
-# is row 1). The Electron open panel ignores keyboard (Cmd+Shift+G/type), so we
-# select by MOUSE only. Calibrated to the panel's remembered frame 2026/06.
-WA_PANEL_ROW1_X=490
-WA_PANEL_ROW1_Y=310
+WA_ATTACH_X=${WA_ATTACH_X:-363}
+WA_ATTACH_Y=${WA_ATTACH_Y:-802}
+WA_ATTACH_FILE_X=${WA_ATTACH_FILE_X:-415}   # "檔案" menu item (top of the + popup)
+WA_ATTACH_FILE_Y=${WA_ATTACH_FILE_Y:-603}
+# Open-panel first file row. LEGACY: the file send now picks files via AX
+# (panel_select.scpt), so these coords are no longer used by wa_send_file. Kept
+# only as a fallback reference; safe to ignore.
+WA_PANEL_ROW1_X=${WA_PANEL_ROW1_X:-490}
+WA_PANEL_ROW1_Y=${WA_PANEL_ROW1_Y:-310}
 
 # Privacy-popup close X ("你的對話和通話均受隱私保護" modal)
-WA_PRIVACY_X=590
-WA_PRIVACY_Y=140
+WA_PRIVACY_X=${WA_PRIVACY_X:-590}
+WA_PRIVACY_Y=${WA_PRIVACY_Y:-140}
 
 wa_log() { echo "[wa] $*" >&2; }
 
@@ -231,6 +240,23 @@ wa_click_result() {
   sleep 0.8
 }
 
+# ── AX-pick a chat by EXACT name (preferred over wa_click_result) ──
+# Rows are AXButtons whose description is the contact name, so we click the
+# matching one directly — no pixel row coords, no unstable-order wrong-person
+# risk. Returns 0 only when EXACTLY ONE row matched (clicked it); nonzero when
+# none or several matched (e.g. a name colliding with the self-chat). On nonzero
+# the caller falls back to the vision-gated wa_click_result — never a blind guess.
+wa_pick_chat_by_name() {
+  local name="$1" rc
+  rc=$(osascript "$_WA_HELPER_DIR/wa_pick.scpt" "$name" 2>&1)
+  if [[ "$rc" == "OK" ]]; then
+    sleep 0.8
+    return 0
+  fi
+  wa_log "AX pick: $rc"
+  return 1
+}
+
 wa_start_call() {
   local type="${1:-voice}"
   cliclick c:${WA_CALL_DROPDOWN_X},${WA_CALL_DROPDOWN_Y}
@@ -339,78 +365,68 @@ wa_postverify() {
   echo "$shot"
 }
 
-# ── Send a file via the attachment "+" → 檔案 → Cmd+Shift+G in Finder panel ──
-# WhatsApp is Electron but Cmd+Shift+G DOES work IF the Finder panel has focus.
-# Key: click inside the panel's file list area FIRST, then send the shortcut.
-# Same staging-dir pattern as LINE: isolate the file in an empty temp dir so
-# there's zero ambiguity when selecting.
+# ── Send a file via the attachment "+" → 檔案 → AX file picker ──
+# Robust, wrong-file-proof selection: stage the file in ~/Downloads (a reliable
+# sidebar location), then drive the macOS open panel ENTIRELY via Accessibility —
+# click the "下載項目" sidebar entry, then select the row whose name matches the
+# file EXACTLY (panel_select.scpt). If the name isn't found it ABORTS without
+# sending. This replaces the old Cmd+Shift+G + Down + Enter flow, which on some
+# machines silently selected whatever file the panel was sitting on and sent it.
 # Optional $2 = caption text (shown under the file in the send preview).
 # Chat must already be open.
 wa_send_file() {
   local filepath="$1"
   local caption="${2:-}"
-  local base
+  local base sendname dl rc
   base=$(basename "$filepath")
 
-  # Stage the file alone in a temp dir
-  local stage_dir="/tmp/hermes_wa_file_$$"
-  rm -rf "$stage_dir"
-  mkdir -p "$stage_dir"
-  cp "$filepath" "$stage_dir/"
-  trap 'rm -rf "$stage_dir"' RETURN
+  # Stage in ~/Downloads. Use the original name unless it would clobber an
+  # existing file — then a unique name (so cleanup never deletes the user's file).
+  sendname="$base"
+  if [[ -e "$HOME/Downloads/$sendname" ]]; then
+    sendname="hermes_$$_$base"
+  fi
+  dl="$HOME/Downloads/$sendname"
+  cp "$filepath" "$dl" || { wa_log "stage copy failed"; return 1; }
 
   # 1. + popup → 檔案 → open panel
   cliclick c:${WA_ATTACH_X},${WA_ATTACH_Y}
-  sleep 0.8
+  sleep 0.9
   cliclick c:${WA_ATTACH_FILE_X},${WA_ATTACH_FILE_Y}
-  sleep 2
+  sleep 2.2
 
-  # 2. Click inside the panel file list to give it focus (critical!)
-  #    Then Cmd+Shift+G → type staging dir → Enter
-  cliclick c:${WA_PANEL_ROW1_X},${WA_PANEL_ROW1_Y}
-  sleep 0.3
-  osascript -e 'tell application "System Events" to keystroke "g" using {command down, shift down}'
-  sleep 1.2
-  # Clear any previous path, PASTE the new one (keystroke goes through input
-  # method → full-width chars → path broken). pbcopy+Cmd+V bypasses IM.
-  printf '%s' "$stage_dir" | pbcopy
-  osascript -e 'tell application "System Events" to keystroke "a" using command down'
-  sleep 0.2
-  osascript -e 'tell application "System Events" to key code 51'
-  sleep 0.2
-  osascript -e 'tell application "System Events" to keystroke "v" using command down'
-  sleep 0.5
-  # Enter to navigate INTO the staging dir (path WITHOUT trailing / = directly
-  # enters the dir; WITH trailing / = goes to parent and highlights folder)
-  osascript -e 'tell application "System Events" to key code 36'
-  sleep 1.5
-  # Click inside the file list to ensure it has focus after navigation
-  cliclick c:${WA_PANEL_ROW1_X},${WA_PANEL_ROW1_Y}
-  sleep 0.3
-  # Down to select the lone file
-  osascript -e 'tell application "System Events" to key code 125'
-  sleep 0.5
-  # Enter to open it → WhatsApp shows preview
+  # 2. AX-select the file by exact name (sidebar Downloads → match name). This
+  #    cannot pick the wrong file: a miss returns "ERR:" and we cancel + bail.
+  rc=$(osascript "$_WA_HELPER_DIR/panel_select.scpt" "WhatsApp" "下載項目" "$sendname" 2>&1)
+  if [[ "$rc" != "OK" ]]; then
+    wa_log "⚠️  file picker aborted ($rc) — cancelling, NOT sending"
+    osascript -e 'tell application "System Events" to key code 53' >/dev/null 2>&1
+    rm -f "$dl"
+    return 1
+  fi
+
+  # 3. Open the selected file (default button) → WhatsApp shows the send preview
   osascript -e 'tell application "System Events" to key code 36'
   sleep 2
 
-  # 3. If caption provided, type it in the caption field
+  # 4. Optional caption
   if [[ -n "$caption" ]]; then
     printf '%s' "$caption" | pbcopy
     osascript << 'EOF'
 tell application "System Events"
   set f to value of attribute "AXFocusedUIElement" of process "WhatsApp"
-  if class of f is text area then
-    set value of f to (the clipboard as text)
-  end if
+  try
+    if class of f is text area then set value of f to (the clipboard as text)
+  end try
 end tell
 EOF
     sleep 0.3
   fi
 
-  # 4. Send (Enter in the preview)
+  # 5. Send (Enter in the preview)
   osascript -e 'tell application "System Events" to tell process "WhatsApp" to key code 36'
   sleep 1.5
 
+  rm -f "$dl"
   wa_postverify file
 }

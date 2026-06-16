@@ -4,20 +4,29 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 # Source at the top of any line_*.sh script:
 #   source "$(cd "$(dirname "$0")" && pwd)/line_helpers.sh"
 
+# ── Per-machine coordinate overrides ────────────────────────────────────────
+# Every coordinate below is ${VAR:-default}, overridable WITHOUT editing this
+# file: export the var, or (preferred) drop a git-ignored
+# messaging_coords.local.sh next to this file. Run ./calibrate.sh to generate it
+# for YOUR screen. With nothing overridden, every value falls back to the
+# original 2026/06 calibration — behaviour is identical to before.
+_LINE_HELPER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+[ -f "$_LINE_HELPER_DIR/messaging_coords.local.sh" ] && . "$_LINE_HELPER_DIR/messaging_coords.local.sh"
+
 # ── LINE window geometry (pinned) — 1440×794 @ (0,30) ──
-LINE_WIN_X=0 ; LINE_WIN_Y=30 ; LINE_WIN_W=1440 ; LINE_WIN_H=794
+LINE_WIN_X=${LINE_WIN_X:-0} ; LINE_WIN_Y=${LINE_WIN_Y:-30} ; LINE_WIN_W=${LINE_WIN_W:-1440} ; LINE_WIN_H=${LINE_WIN_H:-794}
 
 # ── Calibrated coords (2026/06, live-verified) ──
 # Search results
-LINE_RESULT_X=150 ; LINE_RESULT_ROW1_Y=198 ; LINE_ROW_H=70
+LINE_RESULT_X=${LINE_RESULT_X:-150} ; LINE_RESULT_ROW1_Y=${LINE_RESULT_ROW1_Y:-198} ; LINE_ROW_H=${LINE_ROW_H:-70}
 # Call dropdown
-LINE_PHONE_ICON_X=1370 ; LINE_PHONE_ICON_Y=112
-LINE_VOICE_X=1375 ; LINE_VOICE_Y=157
-LINE_VIDEO_X=1375 ; LINE_VIDEO_Y=185
+LINE_PHONE_ICON_X=${LINE_PHONE_ICON_X:-1370} ; LINE_PHONE_ICON_Y=${LINE_PHONE_ICON_Y:-112}
+LINE_VOICE_X=${LINE_VOICE_X:-1375} ; LINE_VOICE_Y=${LINE_VOICE_Y:-157}
+LINE_VIDEO_X=${LINE_VIDEO_X:-1375} ; LINE_VIDEO_Y=${LINE_VIDEO_Y:-185}
 # Attach (paperclip) button
-LINE_ATTACH_X=402 ; LINE_ATTACH_Y=802
+LINE_ATTACH_X=${LINE_ATTACH_X:-402} ; LINE_ATTACH_Y=${LINE_ATTACH_Y:-802}
 # Input field center (from AX: text area 1 of splitter group 1 of splitter group 1)
-LINE_INPUT_X=908 ; LINE_INPUT_Y=748
+LINE_INPUT_X=${LINE_INPUT_X:-908} ; LINE_INPUT_Y=${LINE_INPUT_Y:-748}
 
 # ── Logging ──
 line_log() { echo "[line] $*"; }
@@ -144,34 +153,45 @@ line_hangup() {
   sleep 0.5
 }
 
-# ── Attach file via Finder panel (Cmd+Shift+G + cliclick t:) ──
-# Usage: line_attach_file "/absolute/path/to/staging_dir"
+# ── Attach + send a file via the paperclip → AX file picker ──
+# Wrong-file-proof, like wa_send_file: stage the file in ~/Downloads (a reliable
+# sidebar location), then drive the open panel ENTIRELY via Accessibility — click
+# the "下載項目" sidebar entry, then select the row whose name matches EXACTLY
+# (panel_select.scpt). If the name isn't found it ABORTS without sending.
+# This replaces the old Cmd+Shift+G + cliclick-type + Down + Enter flow, which
+# could land on a stale folder and silently send the wrong file.
+# Pass the FILE PATH (not a staging dir).
 line_attach_file() {
-  local stage_dir="$1"
-  # Click paperclip
+  local filepath="$1"
+  local base sendname dl rc
+  base=$(basename "$filepath")
+
+  # Stage in ~/Downloads; unique name only if it would clobber an existing file
+  # (so cleanup never deletes the user's own file).
+  sendname="$base"
+  if [[ -e "$HOME/Downloads/$sendname" ]]; then
+    sendname="hermes_$$_$base"
+  fi
+  dl="$HOME/Downloads/$sendname"
+  cp "$filepath" "$dl" || { line_log "stage copy failed"; return 1; }
+
+  # Click paperclip → open panel
   cliclick c:${LINE_ATTACH_X},${LINE_ATTACH_Y}
-  sleep 1.8
-  # Click inside panel to ensure focus
-  cliclick c:760,420
-  sleep 0.3
-  # Open Go-to-folder sheet
-  osascript -e 'tell application "System Events" to keystroke "g" using {command down, shift down}'
-  sleep 1.2
-  # Triple-click to select any stale text, then type path
-  # (LINE's Go-to-folder ignores Cmd+V; cliclick t: is the only way)
-  cliclick tc:700,270
-  sleep 0.2
-  cliclick t:"$stage_dir"
-  sleep 0.5
-  # Enter → navigate into dir
+  sleep 2.2
+
+  # AX-select the file by exact name; abort (no send) if not found.
+  rc=$(osascript "$_LINE_HELPER_DIR/panel_select.scpt" "LINE" "下載項目" "$sendname" 2>&1)
+  if [[ "$rc" != "OK" ]]; then
+    line_log "⚠️  file picker aborted ($rc) — cancelling, NOT sending"
+    osascript -e 'tell application "System Events" to key code 53' >/dev/null 2>&1
+    rm -f "$dl"
+    return 1
+  fi
+
+  # Open the selected file → LINE sends it
   osascript -e 'tell application "System Events" to key code 36'
-  sleep 1.5
-  # Down → select the lone file
-  osascript -e 'tell application "System Events" to key code 125'
-  sleep 0.5
-  # Enter → open/send
-  osascript -e 'tell application "System Events" to key code 36'
-  sleep 1.8
+  sleep 2
+  rm -f "$dl"
 }
 
 # ── Hide LINE ──
