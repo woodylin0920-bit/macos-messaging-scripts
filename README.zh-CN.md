@@ -191,6 +191,7 @@ LINE / WhatsApp 桌面 App
 - [ ] 用 MTProto(Telethon + API 凭证)私聊任意 Telegram 联系人。注意:发送到已知会话用 `hermes send -t telegram:<chat_id> "..."` 已可用(复用已配置的 bot),收信由 hermes gateway 处理 —— Telegram 有官方 API,无需 UI 自动化。
 - [ ] 未读数 / 只读不标已读(可行性待研究)
 - [ ] LINE 用 AX 选会话(目前受阻:LINE 行为 `AXUnknown`)
+- [ ] **微信 (WeChat)** 桌面自动化 —— 与 LINE/WhatsApp 相同的 UI/AX 路线(个人消息没有官方 API)。可能像 LINE 需要截图+视觉;注意微信反自动化较严,封号风险更高。
 - [ ] iMessage 集成(对接现有 `imessage` skill)
 - [ ] 窗口几何自适应(读实际 frame,减少校准)
 - [ ] 深度历史搜索(UI 只能看到当前屏幕)

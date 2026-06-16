@@ -236,6 +236,9 @@ Planned:
       automation is needed.
 - [ ] Unread counts / read-without-marking-read (feasibility unclear)
 - [ ] LINE chat picking via AX (blocked: LINE rows are `AXUnknown` today)
+- [ ] **WeChat (微信)** desktop automation — same UI/AX approach as LINE/WhatsApp
+      (no official personal-messaging API). Likely screenshot + vision like LINE;
+      note WeChat is aggressive about anti-automation, so account-ban risk is higher
 - [ ] iMessage integration (with the existing `imessage` skill)
 - [ ] Window-geometry auto-fit (read the actual frame, reduce calibration)
 - [ ] Deep history search (UI only sees what's on screen)
