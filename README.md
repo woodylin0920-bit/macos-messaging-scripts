@@ -208,7 +208,10 @@ LINE / WhatsApp 桌面 App
   - 等於把現在「手動 `calibrate.sh`」升級成「**裝好即用、壞了自動健檢**」,降低一般用戶門檻。
 
 **待開發 / 未來**
-- [ ] **Telegram**(走 hermes gateway `--deliver telegram` 或桌面自動化)
+- **Telegram** — 不走 UI 自動化(Telegram 有官方 API,比螢幕自動化穩)。
+  - [x] **送訊息/檔案**:已可用 `hermes send -t telegram:<chat_id> "..."`(文字)/ `"MEDIA:<path>"`(檔案),重用已設定的 bot token(如 `@woody_dodo_bot`),無需 LLM。設 `hermes config set TELEGRAM_HOME_CHANNEL <id>` 後可省略 chat_id。
+  - [x] **收指令/通知**:由 hermes gateway + bot 處理(就是你下指令的管道)。
+  - [ ] **DM 任意聯絡人**(非 bot 已知的對話):需 MTProto 使用者 API(Telethon + API 憑證)—— 唯一還沒做的部分。
 - [ ] **未讀數 / 只讀不標已讀**(研究是否可行)
 - [ ] **LINE 選人改 AX**(目前列為 `AXUnknown`,等可讀路徑)
 - [ ] **iMessage** 整合(串既有 `imessage` skill)
