@@ -43,6 +43,7 @@ AFTER=$(line_shot after)
 echo "MEDIA:$AFTER"
 line_log "after-screenshot: $AFTER — verify the green bubble appeared"
 
-# 7. Hide LINE
+# 7. Close the chat room (Esc) so LINE isn't left marking 已讀, then hide
+line_close_chat
 line_hide
 echo "✅ Attempted LINE message to $CONTACT — verify via $AFTER (never trust exit 0)."

@@ -194,6 +194,20 @@ line_attach_file() {
   rm -f "$dl"
 }
 
+# ── Close the open chat room (Esc) ──
+# In LINE, Esc backs out one level: 1st press closes the search overlay, a
+# further press closes the CHAT ROOM (back to the "開始聊天吧!" splash, nothing
+# selected). Closing the chat means LINE isn't left sitting in a conversation
+# marking later incoming messages 已讀. Two presses cover both states (an extra
+# Esc on the splash is harmless).
+line_close_chat() {
+  osascript -e 'tell application "System Events" to tell process "LINE" to set frontmost to true' >/dev/null 2>&1
+  osascript -e 'tell application "System Events" to tell process "LINE" to key code 53' >/dev/null 2>&1
+  sleep 0.3
+  osascript -e 'tell application "System Events" to tell process "LINE" to key code 53' >/dev/null 2>&1
+  sleep 0.3
+}
+
 # ── Hide LINE ──
 line_hide() {
   osascript -e 'tell application "System Events" to tell process "LINE" to keystroke "h" using command down' >/dev/null 2>&1
