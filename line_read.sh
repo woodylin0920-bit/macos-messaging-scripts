@@ -28,5 +28,6 @@ CHAT=$(line_shot read_chat)
 echo "MEDIA:$CHAT"
 line_log "chat screenshot: $CHAT — read the messages visually from this image"
 
+line_close_chat
 line_hide
 echo "✅ Opened LINE chat for $CONTACT — read messages from $CHAT (vision required; LINE has no AX text)."
