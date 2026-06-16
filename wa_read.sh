@@ -20,14 +20,9 @@ if [[ -n "$PHONE" ]]; then
   wa_log "Opening $CONTACT via URL scheme ($PHONE)"
   open "whatsapp://send?phone=$PHONE"
   sleep 3
-  osascript << 'EOF' >/dev/null 2>&1
-tell application "WhatsApp" to activate
-delay 0.3
-tell application "System Events" to tell process "WhatsApp"
-  set frontmost to true
-  tell window 1 to set {position, size} to {{0, 25}, {1440, 875}}
-end tell
-EOF
+  osascript -e 'tell application "WhatsApp" to activate' >/dev/null 2>&1
+  sleep 0.3
+  wa_pin_window
   sleep 0.6
 else
   wa_log "No phone for $CONTACT, using search + AX pick"

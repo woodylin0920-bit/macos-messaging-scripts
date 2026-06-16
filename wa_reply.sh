@@ -23,14 +23,9 @@ REPLY="${3:?Usage: wa_reply.sh <name> <target_text> <reply>}"
 PHONE=$(wa_get_phone "$CONTACT" 2>/dev/null || true)
 if [[ -n "$PHONE" ]]; then
   open "whatsapp://send?phone=$PHONE"; sleep 3
-  osascript >/dev/null 2>&1 <<'EOF'
-tell application "WhatsApp" to activate
-delay 0.3
-tell application "System Events" to tell process "WhatsApp"
-  set frontmost to true
-  tell window 1 to set {position, size} to {{0, 25}, {1440, 875}}
-end tell
-EOF
+  osascript -e 'tell application "WhatsApp" to activate' >/dev/null 2>&1
+  sleep 0.3
+  wa_pin_window
   sleep 0.6
 else
   wa_activate

@@ -173,25 +173,29 @@ end tell
 EOF
 }
 
+# Pin the WhatsApp window to the (overridable) WA_WIN_* frame. Every click coord
+# is calibrated relative to this frame, so ALL activation routes through here —
+# that makes the WA_WIN_* overrides actually take effect.
+wa_pin_window() {
+  osascript >/dev/null 2>&1 <<EOF
+tell application "System Events" to tell process "WhatsApp"
+  set frontmost to true
+  try
+    tell window 1 to set {position, size} to {{$WA_WIN_X, $WA_WIN_Y}, {$WA_WIN_W, $WA_WIN_H}}
+  end try
+end tell
+EOF
+}
+
 wa_activate() {
   open -a WhatsApp
   sleep 1
-  osascript << 'EOF'
-tell application "WhatsApp" to activate
-delay 0.3
-tell application "System Events"
-  tell process "WhatsApp"
-    set frontmost to true
-    tell window 1
-      set position to {0, 25}
-      set size to {1440, 875}
-    end tell
-    key code 53
-    delay 0.2
-    key code 53
-  end tell
-end tell
-EOF
+  osascript -e 'tell application "WhatsApp" to activate' >/dev/null 2>&1
+  sleep 0.3
+  wa_pin_window
+  osascript -e 'tell application "System Events" to tell process "WhatsApp" to key code 53' >/dev/null 2>&1
+  sleep 0.2
+  osascript -e 'tell application "System Events" to tell process "WhatsApp" to key code 53' >/dev/null 2>&1
   sleep 0.2
 }
 
