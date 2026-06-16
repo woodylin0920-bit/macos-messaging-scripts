@@ -380,13 +380,15 @@ wa_send_file() {
   local base sendname dl rc
   base=$(basename "$filepath")
 
-  # Stage in ~/Downloads. Use the original name unless it would clobber an
-  # existing file — then a unique name (so cleanup never deletes the user's file).
+  # Stage in ~/Downloads under a name that does NOT already exist, so our later
+  # `rm` can only ever delete the file we created (never a user file). Use the
+  # original name if free; otherwise loop to a unique one.
   sendname="$base"
-  if [[ -e "$HOME/Downloads/$sendname" ]]; then
-    sendname="hermes_$$_$base"
-  fi
   dl="$HOME/Downloads/$sendname"
+  while [[ -e "$dl" ]]; do
+    sendname="hermes_$$_${RANDOM}_$base"
+    dl="$HOME/Downloads/$sendname"
+  done
   cp "$filepath" "$dl" || { wa_log "stage copy failed"; return 1; }
 
   # 1. + popup → 檔案 → open panel

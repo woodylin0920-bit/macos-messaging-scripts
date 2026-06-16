@@ -166,13 +166,15 @@ line_attach_file() {
   local base sendname dl rc
   base=$(basename "$filepath")
 
-  # Stage in ~/Downloads; unique name only if it would clobber an existing file
-  # (so cleanup never deletes the user's own file).
+  # Stage in ~/Downloads under a name that does NOT already exist, so our later
+  # `rm` can only ever delete the file we created (never a user file). Use the
+  # original name if free; otherwise loop to a unique one.
   sendname="$base"
-  if [[ -e "$HOME/Downloads/$sendname" ]]; then
-    sendname="hermes_$$_$base"
-  fi
   dl="$HOME/Downloads/$sendname"
+  while [[ -e "$dl" ]]; do
+    sendname="hermes_$$_${RANDOM}_$base"
+    dl="$HOME/Downloads/$sendname"
+  done
   cp "$filepath" "$dl" || { line_log "stage copy failed"; return 1; }
 
   # Click paperclip → open panel

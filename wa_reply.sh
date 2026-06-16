@@ -47,8 +47,10 @@ sleep 0.5
 
 # Locate the target bubble by text → right-click point
 POS=$(osascript "$SCRIPT_DIR/wa_reply.scpt" "$TARGET")
-if [[ "$POS" != *,* ]]; then
-  wa_log "⚠️  $POS — target message not visible; NOT replying."
+# Accept ONLY a strict numeric "x,y" — an ERR string (which may itself contain a
+# comma from the target text) must NOT be mistaken for coordinates.
+if [[ ! "$POS" =~ ^[0-9]+,[0-9]+$ ]]; then
+  wa_log "⚠️  $POS — not replying (target not uniquely found)."
   exit 1
 fi
 wa_log "Replying to message at $POS"
