@@ -173,25 +173,29 @@ end tell
 EOF
 }
 
+# Pin the WhatsApp window to the (overridable) WA_WIN_* frame. Every click coord
+# is calibrated relative to this frame, so ALL activation routes through here —
+# that makes the WA_WIN_* overrides actually take effect.
+wa_pin_window() {
+  osascript >/dev/null 2>&1 <<EOF
+tell application "System Events" to tell process "WhatsApp"
+  set frontmost to true
+  try
+    tell window 1 to set {position, size} to {{$WA_WIN_X, $WA_WIN_Y}, {$WA_WIN_W, $WA_WIN_H}}
+  end try
+end tell
+EOF
+}
+
 wa_activate() {
   open -a WhatsApp
   sleep 1
-  osascript << 'EOF'
-tell application "WhatsApp" to activate
-delay 0.3
-tell application "System Events"
-  tell process "WhatsApp"
-    set frontmost to true
-    tell window 1
-      set position to {0, 25}
-      set size to {1440, 875}
-    end tell
-    key code 53
-    delay 0.2
-    key code 53
-  end tell
-end tell
-EOF
+  osascript -e 'tell application "WhatsApp" to activate' >/dev/null 2>&1
+  sleep 0.3
+  wa_pin_window
+  osascript -e 'tell application "System Events" to tell process "WhatsApp" to key code 53' >/dev/null 2>&1
+  sleep 0.2
+  osascript -e 'tell application "System Events" to tell process "WhatsApp" to key code 53' >/dev/null 2>&1
   sleep 0.2
 }
 
@@ -277,7 +281,7 @@ tell application "System Events"
     set frontmost to true
     repeat with w in (every window)
       set sz to size of w
-      if (item 1 of sz) is not 1440 then
+      if (item 1 of sz) is not '"$WA_WIN_W"' then
         perform action "AXRaise" of w
         set p to position of w
         set cx to ((item 1 of p) + 8)
@@ -380,13 +384,15 @@ wa_send_file() {
   local base sendname dl rc
   base=$(basename "$filepath")
 
-  # Stage in ~/Downloads. Use the original name unless it would clobber an
-  # existing file — then a unique name (so cleanup never deletes the user's file).
+  # Stage in ~/Downloads under a name that does NOT already exist, so our later
+  # `rm` can only ever delete the file we created (never a user file). Use the
+  # original name if free; otherwise loop to a unique one.
   sendname="$base"
-  if [[ -e "$HOME/Downloads/$sendname" ]]; then
-    sendname="hermes_$$_$base"
-  fi
   dl="$HOME/Downloads/$sendname"
+  while [[ -e "$dl" ]]; do
+    sendname="hermes_$$_${RANDOM}_$base"
+    dl="$HOME/Downloads/$sendname"
+  done
   cp "$filepath" "$dl" || { wa_log "stage copy failed"; return 1; }
 
   # 1. + popup → 檔案 → open panel

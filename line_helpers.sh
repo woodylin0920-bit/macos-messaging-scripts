@@ -39,25 +39,27 @@ line_shot() {
   echo "$p"
 }
 
+# ── Pin the LINE window to the (overridable) LINE_WIN_* frame ──
+# Click coords are calibrated relative to this frame, so activation routes
+# through here — making the LINE_WIN_* overrides actually take effect.
+line_pin_window() {
+  osascript >/dev/null 2>&1 <<EOF
+tell application "System Events" to tell process "LINE"
+  set frontmost to true
+  try
+    tell window "LINE" to set {position, size} to {{$LINE_WIN_X, $LINE_WIN_Y}, {$LINE_WIN_W, $LINE_WIN_H}}
+  end try
+end tell
+EOF
+}
+
 # ── Activate LINE, pin window to known geometry ──
 line_activate() {
   open -a Line
   sleep 1.5
-  osascript << 'ASEOF' >/dev/null 2>&1
-tell application "LINE" to activate
-delay 0.6
-tell application "System Events"
-  tell process "LINE"
-    set frontmost to true
-    try
-      tell window "LINE"
-        set position to {0, 30}
-        set size to {1440, 794}
-      end tell
-    end try
-  end tell
-end tell
-ASEOF
+  osascript -e 'tell application "LINE" to activate' >/dev/null 2>&1
+  sleep 0.6
+  line_pin_window
   sleep 0.6
 }
 
@@ -166,13 +168,15 @@ line_attach_file() {
   local base sendname dl rc
   base=$(basename "$filepath")
 
-  # Stage in ~/Downloads; unique name only if it would clobber an existing file
-  # (so cleanup never deletes the user's own file).
+  # Stage in ~/Downloads under a name that does NOT already exist, so our later
+  # `rm` can only ever delete the file we created (never a user file). Use the
+  # original name if free; otherwise loop to a unique one.
   sendname="$base"
-  if [[ -e "$HOME/Downloads/$sendname" ]]; then
-    sendname="hermes_$$_$base"
-  fi
   dl="$HOME/Downloads/$sendname"
+  while [[ -e "$dl" ]]; do
+    sendname="hermes_$$_${RANDOM}_$base"
+    dl="$HOME/Downloads/$sendname"
+  done
   cp "$filepath" "$dl" || { line_log "stage copy failed"; return 1; }
 
   # Click paperclip → open panel

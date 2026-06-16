@@ -20,22 +20,20 @@ if [[ -n "$PHONE" ]]; then
   wa_log "Opening $CONTACT via URL scheme ($PHONE)"
   open "whatsapp://send?phone=$PHONE"
   sleep 3
-  osascript << 'EOF' >/dev/null 2>&1
-tell application "WhatsApp" to activate
-delay 0.3
-tell application "System Events" to tell process "WhatsApp"
-  set frontmost to true
-  tell window 1 to set {position, size} to {{0, 25}, {1440, 875}}
-end tell
-EOF
+  osascript -e 'tell application "WhatsApp" to activate' >/dev/null 2>&1
+  sleep 0.3
+  wa_pin_window
   sleep 0.6
 else
   wa_log "No phone for $CONTACT, using search + AX pick"
   wa_activate
   wa_search "$CONTACT"
+  # FAIL CLOSED: reading the wrong chat leaks someone else's messages. If the name
+  # isn't a unique match, abort rather than reading row 1. (URL-scheme path above
+  # is unambiguous.)
   if ! wa_pick_chat_by_name "$CONTACT"; then
-    wa_log "AX pick failed/ambiguous — VISION-CONFIRM the chat before trusting output"
-    wa_click_result 1
+    wa_log "⚠️  '$CONTACT' 不是唯一相符(撞名/找不到)。為避免讀到錯的人的訊息,中止。請用更精確的名字或已知號碼。"
+    exit 1
   fi
 fi
 sleep 0.5

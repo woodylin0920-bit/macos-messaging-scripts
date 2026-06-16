@@ -25,10 +25,12 @@ line_click_result "$RESULT_INDEX"
 sleep 1
 
 # Crop to the chat pane ONLY (drop the list / dock / menu bar) so the message
-# text stays large and legible for the vision model. Region matches the pinned
-# LINE frame ({0,30} 1440×794); full-screen shots make the text too small to read.
+# text stays large and legible for the vision model. Derived from the pinned
+# LINE_WIN_* frame so it still aligns if the window is calibrated to a different
+# position/size. (~340px is the left chat-list width; ~49px is window chrome.)
 CHAT="/tmp/line_read_chat_$(date +%s).png"
-screencapture -x -R340,30,1100,745 "$CHAT"
+LIST_W=340
+screencapture -x -R$((LINE_WIN_X + LIST_W)),${LINE_WIN_Y},$((LINE_WIN_W - LIST_W)),$((LINE_WIN_H - 49)) "$CHAT"
 echo "MEDIA:$CHAT"
 line_log "chat screenshot (cropped to chat pane): $CHAT — read the messages visually"
 
