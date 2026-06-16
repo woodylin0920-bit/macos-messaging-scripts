@@ -90,7 +90,7 @@ RE-activates LINE and loses input focus — use `line_msg.sh` instead.
 
 **LINE search results: ORDER IS UNSTABLE — vision-confirm the row, never trust a
 fixed index.** Row1 center ≈ `(150,200)`, height ≈70. In testing, a blind row-1
-click once opened "Woody自用" (the user's OWN chat) instead of "Woody Lin" — a
+click once opened "自用群組" (the user's OWN chat) instead of "Alice" — a
 near wrong-person send. Hermes MUST screenshot → vision-confirm the row title ==
 the intended contact BEFORE clicking. AX can't read LINE row titles, so this is
 vision-only.
@@ -350,13 +350,10 @@ Check the target chat: open it, screenshot, vision_analyze for new messages afte
 
 **Note:** Opening a chat to check reads the messages — the unread badge clears. If the user asks "did they reply?", open LINE, screenshot the chat list FIRST to see badges before clicking in.
 
-## Woody's LINE Chat List (top 5, as of 2026/06)
-Row order in the left panel (use screenshot+vision to get Y coords each time, but these are approximate):
-1. Woody 自用
-2. 筑ω
-3. Jim Lee 李浚豪（Jun）
-4. 駿
-5. 姚
+## LINE Chat List — row layout
+The left panel lists recent chats top-to-bottom (contacts and groups). Row order
+is UNSTABLE (changes with recent activity), so use screenshot+vision to read the
+titles and get the Y coordinate each time — never hardcode a row index.
 
 Click X is around 200 (left panel center). Y varies by window size — always screenshot+vision to confirm.
 
@@ -553,19 +550,19 @@ which does this automatically.
 WhatsApp chat/search rows are **AXButtons whose description is the contact name**,
 so the scripts now click the row matching the name EXACTLY via Accessibility —
 no pixel row coords, no result_index. It clicks only when EXACTLY ONE row matches;
-if the name collides with the self-chat (two "Woody Lin" rows) it returns
+if the name collides with the self-chat (two "Alice" rows) it returns
 "ambiguous" and the caller falls back to the vision-gated `wa_click_result`.
 (LINE rows are NOT AX-readable — all `AXUnknown` — so LINE stays vision-only.)
 
 **⚠️ Search result ORDER IS UNSTABLE** (fallback path only). The same query
-("Woody Lin") returns different row order depending on recent activity; self-chat
-"Woody Lin (你)" can be #1 or #2. So when AX-pick is ambiguous, **never hardcode
+("Alice") returns different row order depending on recent activity; self-chat
+"Alice (你)" can be #1 or #2. So when AX-pick is ambiguous, **never hardcode
 result_index** — use vision to identify the row, or URL scheme (bypasses search).
 
 **⚠️ Search result click X must be in the LEFT sidebar (x≈197), NOT the chat area.**
 Clicking too far right (x>350) lands in the chat pane, not the search results list.
 If the search-result click lands on the wrong chat (e.g. a group "Ai" instead of
-"Woody Lin"), the x-coordinate is likely wrong — the click hit the previously-open
+"Alice"), the x-coordinate is likely wrong — the click hit the previously-open
 chat in the right pane instead of the search result row in the left sidebar.
 
 ### Key pitfalls — WhatsApp calling
@@ -952,7 +949,7 @@ send_msg.sh whatsapp "Morning!"
    self-chat ("You"/"你") instead of the actual contact. Keep your own
    number OUT of the curated table in `wa_helpers.sh` to prevent this.
 
-2. **Search result order is UNSTABLE.** "Woody Lin" returns self-chat as
+2. **Search result order is UNSTABLE.** "Alice" returns self-chat as
    #1 or #2 depending on recent activity. Hardcoding `result_index` WILL
    eventually hit the wrong person.
 
