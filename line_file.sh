@@ -40,7 +40,14 @@ line_log "before-screenshot: $BEFORE (confirm row $RESULT_INDEX title == \"$CONT
 line_click_result "$RESULT_INDEX"
 
 # 5. Attach + send file via AX file picker (wrong-file-proof)
-line_attach_file "$ABSPATH"
+# Propagate picker failure to the exit status — if panel_select aborts (e.g. the
+# file isn't found), do NOT print a success message or exit 0.
+if ! line_attach_file "$ABSPATH"; then
+  line_close_chat
+  line_hide
+  echo "❌ LINE file NOT sent to $CONTACT (file picker aborted — name not found)."
+  exit 1
+fi
 
 # 6. Post-verify
 AFTER=$(line_shot after)
