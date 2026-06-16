@@ -39,6 +39,12 @@ on run argv
       if not navOk then return "ERR: sidebar '" & sbLabel & "' not found"
       delay 1.0
 
+      -- Force LIST view (Cmd+2). NSOpenPanel persists its last view; in icon /
+      -- column / gallery view the `outline 1` file list below is absent and every
+      -- send would abort. Cmd+2 switches to list view where the AX path exists.
+      keystroke "2" using command down
+      delay 0.6
+
       -- 2) Select the file row whose name matches exactly
       set fileFound to false
       try

@@ -29,6 +29,10 @@ on run argv
               set sz to size of e
               set rowX to item 1 of p
               set rowW to item 1 of sz
+              -- Only use WIDE nodes (the full-width bubble row, ~1097px) to compute
+              -- the click point; narrow inner text nodes would make rowX±140 land
+              -- outside the bubble. Skip anything under 300px wide.
+              if rowW ≥ 300 then
               set cyRaw to (item 2 of p) + ((item 2 of sz) / 2)
               set yBucket to (round (cyRaw / 25))
               if seenY does not contain yBucket then
@@ -41,6 +45,7 @@ on run argv
                   end if
                   set firstPt to ((cx as integer) as text) & "," & ((cyRaw as integer) as text)
                 end if
+              end if
               end if
             end if
           end if
