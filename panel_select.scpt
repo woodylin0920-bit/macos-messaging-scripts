@@ -20,23 +20,39 @@ on run argv
         return "ERR: no open-panel sheet on " & procName
       end try
 
-      -- 1) Navigate via the sidebar entry
+      -- 1) Navigate via the sidebar entry.
+      -- The open-panel sidebar must be visible (it is by default). If a user has
+      -- hidden it, try toggling it back on (Cmd+Opt+S, the standard sidebar
+      -- toggle) once, then look again.
       set navOk to false
-      try
-        set sb to outline 1 of scroll area 1 of splitter group 1 of sh
-        repeat with rw in rows of sb
-          set lbl to ""
-          try
-            set lbl to value of static text 1 of UI element 1 of rw
-          end try
-          if lbl is sbLabel then
-            select rw
-            set navOk to true
-            exit repeat
-          end if
-        end repeat
-      end try
-      if not navOk then return "ERR: sidebar '" & sbLabel & "' not found"
+      set sidebarSeen to false
+      repeat with attempt from 1 to 2
+        try
+          set sb to outline 1 of scroll area 1 of splitter group 1 of sh
+          set sidebarSeen to true
+          repeat with rw in rows of sb
+            set lbl to ""
+            try
+              set lbl to value of static text 1 of UI element 1 of rw
+            end try
+            if lbl is sbLabel then
+              select rw
+              set navOk to true
+              exit repeat
+            end if
+          end repeat
+        end try
+        if navOk then exit repeat
+        if not sidebarSeen and attempt is 1 then
+          -- sidebar likely hidden → toggle it on and retry
+          keystroke "s" using {command down, option down}
+          delay 0.6
+        end if
+      end repeat
+      if not navOk then
+        if not sidebarSeen then return "ERR: open-panel sidebar not available — show it in the panel (View ▸ Show Sidebar) and retry"
+        return "ERR: sidebar '" & sbLabel & "' not found"
+      end if
       delay 1.0
 
       -- Force LIST view (Cmd+2). NSOpenPanel persists its last view; in icon /
