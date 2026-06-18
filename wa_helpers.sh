@@ -187,7 +187,15 @@ end tell
 EOF
 }
 
+# Clear macOS notification banners (iPhone-mirror / reminders) from the top-right.
+# They overlap the call icon and chat area, so cliclick can land on the banner
+# instead of the target. killall is instant, needs no Accessibility permission, and
+# NotificationCenter auto-relaunches. The `|| true` keeps it from aborting callers
+# that run under `set -euo pipefail` when no banner process is present.
+nc_clear() { killall NotificationCenter >/dev/null 2>&1 || true; }
+
 wa_activate() {
+  nc_clear
   open -a WhatsApp
   sleep 1
   osascript -e 'tell application "WhatsApp" to activate' >/dev/null 2>&1
@@ -263,6 +271,7 @@ wa_pick_chat_by_name() {
 
 wa_start_call() {
   local type="${1:-voice}"
+  nc_clear; sleep 0.2   # wipe any banner that popped over the call icon
   cliclick c:${WA_CALL_DROPDOWN_X},${WA_CALL_DROPDOWN_Y}
   sleep 0.5
   if [[ "$type" == "video" ]]; then
