@@ -54,7 +54,15 @@ EOF
 }
 
 # ── Activate LINE, pin window to known geometry ──
+# Clear macOS notification banners (iPhone-mirror / reminders) from the top-right.
+# They overlap the call icon and chat area, so cliclick can land on the banner
+# instead of the target. killall is instant, needs no Accessibility permission, and
+# NotificationCenter auto-relaunches. The `|| true` keeps it from aborting callers
+# that run under `set -euo pipefail` when no banner process is present.
+nc_clear() { killall NotificationCenter >/dev/null 2>&1 || true; }
+
 line_activate() {
+  nc_clear
   open -a Line
   sleep 1.5
   osascript -e 'tell application "LINE" to activate' >/dev/null 2>&1
@@ -134,6 +142,7 @@ ASEOF
 # ── Start a voice/video call (from inside an open chat) ──
 line_start_call() {
   local call_type="${1:-voice}"
+  nc_clear; sleep 0.2   # wipe any banner that popped over the phone icon
   cliclick c:${LINE_PHONE_ICON_X},${LINE_PHONE_ICON_Y}
   sleep 1
   if [ "$call_type" = "video" ]; then
